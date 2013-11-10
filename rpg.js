@@ -184,10 +184,16 @@
         var mapLen = map[0].length;
         var frames = this.frames;
         var y = this.y;
-        var x = this.x = (this.x + 1) % mapLen;
+        var x = this.x + 1;
+        if (x < mapLen) {
+            this.x = x;
+            this.frameQueue.unshift([frames["walk_right.png"], x - this.frameStep, y, 3, 0]);
+            this.frameQueue.unshift([frames["face_right.png"], x, y, 0, 0]);
+        }
+    };
 
-        this.frameQueue.unshift([frames["walk_right.png"], x - this.frameStep, y, 3, 0]);
-        this.frameQueue.unshift([frames["face_right.png"], x, y, 0, 0]);
+    HeroSprite.prototype.faceLeft = function(map) {
+        this.frameQueue.unshift([this.frames["face_left.png"], this.x, this.y, 0, 0]);
     };
 
     HeroSprite.prototype.moveLeft = function(map) {
@@ -195,12 +201,15 @@
         var frames = this.frames;
         var y = this.y;
         var x = this.x - 1;
-        if (x < 0) {
-            x = this.x = mapLen - 1;
+        if (x >= 0) {
+            this.x = x;
+            this.frameQueue.unshift([frames["walk_left.png"], x + this.frameStep, y, 3, 0]);
+            this.frameQueue.unshift([frames["face_left.png"], x, y, 0, 0]);
         }
-        this.x = x;
-        this.frameQueue.unshift([frames["walk_left.png"], x + this.frameStep, y, 3, 0]);
-        this.frameQueue.unshift([frames["face_left.png"], x, y, 0, 0]);
+    };
+
+    HeroSprite.prototype.faceUp = function(map) {
+        this.frameQueue.unshift([this.frames["face_up.png"], this.x, this.y, 0, 0]);
     };
 
     HeroSprite.prototype.moveUp = function(map) {
@@ -208,21 +217,27 @@
         var frames = this.frames;
         var x = this.x;
         var y = this.y - 1;
-        if (y < 0) {
-            y = mapLen - 1;
+        if (y >= 0) {
+            this.y = y;
+            this.frameQueue.unshift([frames["walk_up.png"], x, y + this.frameStep, 3, 0]);
+            this.frameQueue.unshift([frames["face_up.png"], x, y, 0, 0]);
         }
-        this.y = y;
-        this.frameQueue.unshift([frames["walk_up.png"], x, y + this.frameStep, 3, 0]);
-        this.frameQueue.unshift([frames["face_up.png"], x, y, 0, 0]);
+    };
+
+    HeroSprite.prototype.faceDown = function(map) {
+        this.frameQueue.unshift([this.frames["face_down.png"], this.x, this.y, 0, 0]);
     };
 
     HeroSprite.prototype.moveDown = function(map) {
         var mapLen = map.length;
         var frames = this.frames;
         var x = this.x;
-        var y = this.y = (this.y + 1) % mapLen;
-        this.frameQueue.unshift([frames["walk_down.png"], x, y - this.frameStep, 3, 0]);
-        this.frameQueue.unshift([frames["face_down.png"], x, y, 0, 0]);
+        var y = this.y + 1;
+        if (y < mapLen) {
+            this.y = y;
+            this.frameQueue.unshift([frames["walk_down.png"], x, y - this.frameStep, 3, 0]);
+            this.frameQueue.unshift([frames["face_down.png"], x, y, 0, 0]);
+        }
     };
 
     var GameEngine = function(el, options) {
