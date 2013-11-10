@@ -324,7 +324,7 @@
         ];
 
         this.tileFactory = {
-            grass: new ColorTile('green'),
+            grass: new SpriteTile(this.frames['grass.png'].frame, this.spriteSheet),
             wall: new SpriteTile(this.frames['road2.png'].frame, this.spriteSheet)
         };
 
