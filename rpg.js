@@ -185,10 +185,12 @@
         var frames = this.frames;
         var y = this.y;
         var x = this.x + 1;
-        if (x < mapLen) {
+        if (x < mapLen && map[y][x] == 0) {
             this.x = x;
             this.frameQueue.unshift([frames["walk_right.png"], x - this.frameStep, y, 3, 0]);
             this.frameQueue.unshift([frames["face_right.png"], x, y, 0, 0]);
+        } else {
+            this.faceRight();
         }
     };
 
@@ -201,10 +203,12 @@
         var frames = this.frames;
         var y = this.y;
         var x = this.x - 1;
-        if (x >= 0) {
+        if (x >= 0 && map[y][x] == 0) {
             this.x = x;
             this.frameQueue.unshift([frames["walk_left.png"], x + this.frameStep, y, 3, 0]);
             this.frameQueue.unshift([frames["face_left.png"], x, y, 0, 0]);
+        } else {
+            this.faceLeft();
         }
     };
 
@@ -217,10 +221,12 @@
         var frames = this.frames;
         var x = this.x;
         var y = this.y - 1;
-        if (y >= 0) {
+        if (y >= 0 && map[y][x] == 0) {
             this.y = y;
             this.frameQueue.unshift([frames["walk_up.png"], x, y + this.frameStep, 3, 0]);
             this.frameQueue.unshift([frames["face_up.png"], x, y, 0, 0]);
+        } else {
+            this.faceUp();
         }
     };
 
@@ -233,10 +239,12 @@
         var frames = this.frames;
         var x = this.x;
         var y = this.y + 1;
-        if (y < mapLen) {
+        if (y < mapLen && map[y][x] == 0) {
             this.y = y;
             this.frameQueue.unshift([frames["walk_down.png"], x, y - this.frameStep, 3, 0]);
             this.frameQueue.unshift([frames["face_down.png"], x, y, 0, 0]);
+        } else {
+            this.faceDown();
         }
     };
 
