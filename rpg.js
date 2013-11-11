@@ -320,12 +320,14 @@
     GameEngine.prototype.initTiles = function() {
         this.tileLookup = [
             'grass',
-            'wall'
+            'water',
+            'cliff'
         ];
 
         this.tileFactory = {
             grass: new SpriteTile(this.frames['grass.png'].frame, this.spriteSheet),
-            wall: new SpriteTile(this.frames['cliff.png'].frame, this.spriteSheet)
+            water: new SpriteTile(this.frames['water.png'].frame, this.spriteSheet),
+            cliff: new SpriteTile(this.frames['cliff.png'].frame, this.spriteSheet)
         };
 
         this.bgRenderer = new BgRenderer(

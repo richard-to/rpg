@@ -95,6 +95,14 @@
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
 	"sourceSize": {"w":64,"h":64}
+},
+"water.png":
+{
+	"frame": {"x":2,"y":266,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
 }},
 "meta": {
 	"app": "http://www.codeandweb.com/texturepacker ",
@@ -103,6 +111,6 @@
 	"format": "RGBA8888",
 	"size": {"w":256,"h":512},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:ed37b5ffffb10e5d5928518bcb07f2c4:1/1$"
+	"smartupdate": "$TexturePacker:SmartUpdate:55e2515defe5b4c30e2c00a4c75419a2:1/1$"
 }
 }
