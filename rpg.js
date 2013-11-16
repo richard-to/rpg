@@ -326,7 +326,7 @@
 
         this.tileFactory = {
             grass: new SpriteTile(this.frames['grass.png'].frame, this.spriteSheet),
-            water: new SpriteTile(this.frames['water.png'].frame, this.spriteSheet),
+            water: new SpriteTile(this.frames['water2.png'].frame, this.spriteSheet),
             cliff: new SpriteTile(this.frames['cliff.png'].frame, this.spriteSheet)
         };
 
