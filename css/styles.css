@@ -1,0 +1,64 @@
+body {
+    background: #aaa;
+}
+#game-wrap {
+    position: relative;
+}
+
+#menu-wrap {
+    box-sizing: border-box;
+    position: absolute;
+    color: #fff;
+    font-family: monospace;
+    width: 320px;
+    height: 100px;
+    border: 3px solid #ececec;
+    background: blue;
+    top: 380px;
+}
+
+#action-wrap {
+    box-sizing: border-box;
+    position: absolute;
+    color: #fff;
+    font-family: monospace;
+    width: 320px;
+    height: 100px;
+    border: 3px solid #ececec;
+    background: blue;
+    top: 380px;
+    left: 320px;
+}
+
+.hero-status {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 5px;
+}
+
+.hero-status .name {
+    width: 55%;
+}
+
+.hero-status .mp {
+    width: 20%;
+}
+
+.hero-status .hp {
+    width: 25%;
+}
+
+.action-status {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 5px;
+}
+
+.action-status td {
+    width: 50%;
+}
+
+.action-status td:hover {
+    background: #0303a5;
+    cursor: pointer;
+}
