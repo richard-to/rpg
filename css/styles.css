@@ -1,11 +1,12 @@
 body {
     background: #aaa;
 }
+
 #game-wrap {
     position: relative;
 }
 
-#menu-wrap {
+.party-wrap {
     box-sizing: border-box;
     position: absolute;
     color: #fff;
@@ -17,7 +18,7 @@ body {
     top: 380px;
 }
 
-#action-wrap {
+.enemy-wrap {
     box-sizing: border-box;
     position: absolute;
     color: #fff;
@@ -30,21 +31,38 @@ body {
     left: 320px;
 }
 
-.hero-status {
+.action-wrap {
+    box-sizing: border-box;
+    position: absolute;
+    color: #fff;
+    font-family: monospace;
+    width: 320px;
+    height: 100px;
+    border: 3px solid #ececec;
+    background: blue;
+    top: 380px;
+    left: 320px;
+}
+
+.hide-menu {
+    display: none;
+}
+
+.entity-status {
     box-sizing: border-box;
     width: 100%;
     padding: 5px;
 }
 
-.hero-status .name {
+.entity-status .name {
     width: 55%;
 }
 
-.hero-status .mp {
+.entity-status .mp {
     width: 20%;
 }
 
-.hero-status .hp {
+.entity-status .hp {
     width: 25%;
 }
 
