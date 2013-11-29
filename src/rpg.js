@@ -122,8 +122,8 @@
             ctx.drawImage(spriteSheet,
                 frame.x, frame.y, frame.w, frame.h,
                 (tileSize - frame.w*2) / 2 + (x - sx) * tileSize,
-                (tileSize - frame.h*2) / 2 + tileSize * (y - sy),
-                tileSize, tileSize);
+                (64 - frame.h*2) / 2 + 64 * (y - sy),
+                tileSize, 80);
             ctx.imageSmoothingEnabled = true;
             if (data[4] < data[3]) {
                 ++data[4];
@@ -133,21 +133,33 @@
     };
 
     var HeroSprite = function(frames) {
-        this.frames = $.extend({
-            walkLeft: 'hero_walk_left.png',
-            faceLeft: 'hero_face_left.png',
-            walkRight: 'hero_walk_right.png',
-            faceRight: 'hero_face_right.png',
-            walkUp: 'hero_walk_up.png',
-            faceUp: 'hero_face_up.png',
-            walkDown: 'hero_walk_down.png',
-            faceDown: 'hero_face_down.png'
-        }, frames);
+        this.frames = {
+            walk_left_1: 'walk_left_1.png',
+            walk_left_2: 'walk_left_2.png',
+            face_left: 'face_left.png',
+            walk_right_1: 'walk_right_1.png',
+            walk_right_2: 'walk_right_2.png',
+            face_right: 'face_right.png',
+            walk_up_1: 'walk_up_1.png',
+            walk_up_2: 'walk_up_2.png',
+            face_up: 'face_up.png',
+            walk_down_1: 'walk_down_1.png',
+            walk_down_2: 'walk_down_2.png',
+            face_down: 'face_down.png',
+            attack_1: 'attack1.png',
+            attack_2: 'attack2.png'
+        };
 
+        for (var name in frames) {
+            var key = name.substring(0, name.lastIndexOf('.'));
+            this.frames[key] = frames[name];
+        }
+        this.scale = 2;
         this.frameStep = 0.5;
         this.x = 0;
         this.y = 1;
         this.frameQueue = [];
+        this.keyQueue = [];
     };
 
     HeroSprite.prototype.queue = function(frame) {
@@ -177,7 +189,7 @@
     };
 
     HeroSprite.prototype.faceRight = function(map) {
-        this.frameQueue.unshift([this.frames["hero_face_right.png"], this.x, this.y, 0, 0]);
+        this.frameQueue.unshift([this.frames.face_right, this.x, this.y, 0, 0]);
     };
 
     HeroSprite.prototype.moveRight = function(map) {
@@ -187,15 +199,15 @@
         var x = this.x + 1;
         if (x < mapLen && map[y][x] == 0) {
             this.x = x;
-            this.frameQueue.unshift([frames["hero_walk_right.png"], x - this.frameStep, y, 3, 0]);
-            this.frameQueue.unshift([frames["hero_face_right.png"], x, y, 0, 0]);
+            this.frameQueue.unshift([frames.walk_right_1, x - this.frameStep, y, 5, 0]);
+            this.frameQueue.unshift([frames.face_right, x, y, 0, 0]);
         } else {
             this.faceRight();
         }
     };
 
     HeroSprite.prototype.faceLeft = function(map) {
-        this.frameQueue.unshift([this.frames["hero_face_left.png"], this.x, this.y, 0, 0]);
+        this.frameQueue.unshift([this.frames.face_left, this.x, this.y, 0, 0]);
     };
 
     HeroSprite.prototype.moveLeft = function(map) {
@@ -205,15 +217,15 @@
         var x = this.x - 1;
         if (x >= 0 && map[y][x] == 0) {
             this.x = x;
-            this.frameQueue.unshift([frames["hero_walk_left.png"], x + this.frameStep, y, 3, 0]);
-            this.frameQueue.unshift([frames["hero_face_left.png"], x, y, 0, 0]);
+            this.frameQueue.unshift([frames.walk_left_1, x + this.frameStep, y, 5, 0]);
+            this.frameQueue.unshift([frames.face_left, x, y, 0, 0]);
         } else {
             this.faceLeft();
         }
     };
 
     HeroSprite.prototype.faceUp = function(map) {
-        this.frameQueue.unshift([this.frames["hero_face_up.png"], this.x, this.y, 0, 0]);
+        this.frameQueue.unshift([this.frames.face_up, this.x, this.y, 0, 0]);
     };
 
     HeroSprite.prototype.moveUp = function(map) {
@@ -223,15 +235,17 @@
         var y = this.y - 1;
         if (y >= 0 && map[y][x] == 0) {
             this.y = y;
-            this.frameQueue.unshift([frames["hero_walk_up.png"], x, y + this.frameStep, 3, 0]);
-            this.frameQueue.unshift([frames["hero_face_up.png"], x, y, 0, 0]);
+            this.frameQueue.unshift([frames.walk_up_1, x, y + .75, 3, 0]);
+            this.frameQueue.unshift([frames.face_up, x, y + .5, 3, 0]);
+            this.frameQueue.unshift([frames.walk_up_2, x, y + .25, 3, 0]);
+            this.frameQueue.unshift([frames.face_up, x, y, 0, 0]);
         } else {
             this.faceUp();
         }
     };
 
     HeroSprite.prototype.faceDown = function(map) {
-        this.frameQueue.unshift([this.frames["hero_face_down.png"], this.x, this.y, 0, 0]);
+        this.frameQueue.unshift([this.frames.face_down, this.x, this.y, 0, 0]);
     };
 
     HeroSprite.prototype.moveDown = function(map) {
@@ -241,8 +255,10 @@
         var y = this.y + 1;
         if (y < mapLen && map[y][x] == 0) {
             this.y = y;
-            this.frameQueue.unshift([frames["hero_walk_down.png"], x, y - this.frameStep, 3, 0]);
-            this.frameQueue.unshift([frames["hero_face_down.png"], x, y, 0, 0]);
+            this.frameQueue.unshift([frames.walk_down_1, x, y - 0.75, 3, 0]);
+            this.frameQueue.unshift([frames.face_down, x, y - .5, 3, 0]);
+            this.frameQueue.unshift([frames.walk_down_1, x, y - .25, 3, 0]);
+            this.frameQueue.unshift([frames.face_down, x, y, 0, 0]);
         } else {
             this.faceDown();
         }
