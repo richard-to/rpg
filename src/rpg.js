@@ -6,9 +6,15 @@
         UP: 38,
         RIGHT: 39,
         DOWN: 40,
-        PAUSE: 13
+        PAUSE: 13,
+        ATTACK: 65
     };
 
+    // Game mode that we are in. Are we exploring or in combat?
+    var GameMode = {
+        EXPLORE: 0,
+        COMBAT: 1
+    };
 
     // Background tile using solid fill color. Defaults to white.
     //
@@ -48,20 +54,20 @@
     // - map: 2d array of tiles. Each digit references a specific tile in TileFactory.
     // - tileFactory: An array with tile objects (ColorTile or SpriteTile).
     // - tileSize: Size of tile. 64 would represent a 64x64 tile.
-    // - screenWidth: Canvas width in tiles. More accurately grid width.
-    // - screenHeight: Canvas height in tiles.
+    // - gridWidth: Grid width
+    // - gridHeight: Grid height
     //
-    var BgRenderer = function(map, tileLookup, tileFactory, tileSize, screenWidth, screenHeight) {
+    var BgRenderer = function(map, tileLookup, tileFactory, tileSize, gridWidth, gridHeight) {
         this.map = map;
         this.tileSize = tileSize;
         this.tileLookup = tileLookup;
         this.tileFactory = tileFactory;
-        this.screenWidth = screenWidth;
-        this.screenHeight = screenHeight;
-        this.screenMidWidth = Math.floor(this.screenWidth / 2) - 1 - this.screenWidth % 2;
-        this.screenRemWidth = this.screenWidth - this.screenMidWidth;
-        this.screenMidHeight = Math.floor(this.screenHeight / 2) - 1 - this.screenHeight % 2;
-        this.screenRemHeight = this.screenHeight - this.screenMidHeight;
+        this.gridWidth = gridWidth;
+        this.gridHeight = gridHeight;
+        this.gridMidWidth = Math.floor(this.gridWidth / 2) - 1 - this.gridWidth % 2;
+        this.gridRemWidth = this.gridWidth - this.gridMidWidth;
+        this.gridMidHeight = Math.floor(this.gridHeight / 2) - 1 - this.gridHeight % 2;
+        this.gridRemHeight = this.gridHeight - this.gridMidHeight;
     };
 
     // Draws background on canvas.
@@ -93,10 +99,10 @@
         cx = Math.floor(cx);
         cy = Math.floor(cy);
 
-        if (cx < this.screenMidWidth) {
-            cx = this.screenMidWidth;
-        } else if (cx > mapLenX - this.screenRemWidth - 1) {
-            cx = mapLenX - this.screenRemWidth;
+        if (cx < this.gridMidWidth) {
+            cx = this.gridMidWidth;
+        } else if (cx > mapLenX - this.gridRemWidth - 1) {
+            cx = mapLenX - this.gridRemWidth;
         } else {
             var tileDiff = ocx - Math.floor(ocx);
             if (tileDiff != 0) {
@@ -104,10 +110,10 @@
             }
         }
 
-        if (cy < this.screenMidHeight) {
-            cy = this.screenMidHeight;
-        } else if (cy > mapLenY - this.screenRemHeight - 1) {
-            cy = mapLenY - this.screenRemHeight;
+        if (cy < this.gridMidHeight) {
+            cy = this.gridMidHeight;
+        } else if (cy > mapLenY - this.gridRemHeight - 1) {
+            cy = mapLenY - this.gridRemHeight;
         } else {
             var tileDiff = ocy - Math.floor(ocy);
             if (tileDiff != 0) {
@@ -115,10 +121,10 @@
             }
         }
 
-        var sy = cy - this.screenMidHeight;
-        var sx = cx - this.screenMidWidth;
-        var ey = cy + this.screenRemHeight - 1;
-        var ex = cx + this.screenRemWidth - 1;
+        var sy = cy - this.gridMidHeight;
+        var sx = cx - this.gridMidWidth;
+        var ey = cy + this.gridRemHeight - 1;
+        var ex = cx + this.gridRemWidth - 1;
 
         if (px) {
             ++ex;
@@ -148,25 +154,26 @@
     // map: See BgRenderer
     // spriteSheet: Spritesheet with sprites
     // tileSize: See BgRenderer
-    // screenWidth: See BgRenderer
-    // screenHeight: See BgRenderer
+    // gridWidth: See BgRenderer
+    // gridHeight: See BgRenderer
     //
-    var SpriteRenderer = function(map, spriteSheet, tileSize, screenWidth, screenHeight) {
+    var SpriteRenderer = function(map, spriteSheet, tileSize, gridWidth, gridHeight) {
         this.map = map;
         this.spriteSheet = spriteSheet;
         this.tileSize = tileSize;
-        this.screenWidth = screenWidth;
-        this.screenHeight = screenHeight;
-        this.screenMidWidth = Math.floor(this.screenWidth / 2) - 1 - this.screenWidth % 2;
-        this.screenRemWidth = this.screenWidth - this.screenMidWidth;
-        this.screenMidHeight = Math.floor(this.screenHeight / 2) - 1 - this.screenHeight % 2;
-        this.screenRemHeight = this.screenHeight - this.screenMidHeight;
+        this.gridWidth = gridWidth;
+        this.gridHeight = gridHeight;
+        this.gridMidWidth = Math.floor(this.gridWidth / 2) - 1 - this.gridWidth % 2;
+        this.gridRemWidth = this.gridWidth - this.gridMidWidth;
+        this.gridMidHeight = Math.floor(this.gridHeight / 2) - 1 - this.gridHeight % 2;
+        this.gridRemHeight = this.gridHeight - this.gridMidHeight;
     };
 
     // Draws sprite.
     //
     // ctx: Canvas context.
     // sprite: Sprite object to draw.
+    //
     SpriteRenderer.prototype.draw = function(ctx, sprite) {
         var map = this.map;
         var spriteSheet = this.spriteSheet;
@@ -184,22 +191,22 @@
 
             var cx = x;
             var cy = y;
-            if (cx < this.screenMidWidth) {
-                cx = this.screenMidWidth;
-            } else if (cx > mapLenX - this.screenRemWidth) {
-                cx = mapLenX - this.screenRemWidth;
+            if (cx < this.gridMidWidth) {
+                cx = this.gridMidWidth;
+            } else if (cx > mapLenX - this.gridRemWidth) {
+                cx = mapLenX - this.gridRemWidth;
             }
 
-            if (cy < this.screenMidHeight) {
-                cy = this.screenMidHeight;
-            } else if (cy > mapLenY - this.screenRemHeight) {
-                cy = mapLenY - this.screenRemHeight;
+            if (cy < this.gridMidHeight) {
+                cy = this.gridMidHeight;
+            } else if (cy > mapLenY - this.gridRemHeight) {
+                cy = mapLenY - this.gridRemHeight;
             }
 
-            var sy = cy - this.screenMidHeight;
-            var sx = cx - this.screenMidWidth;
-            var ey = cy + this.screenRemHeight - 1;
-            var ex = cx + this.screenRemWidth - 1;
+            var sy = cy - this.gridMidHeight;
+            var sx = cx - this.gridMidWidth;
+            var ey = cy + this.gridRemHeight - 1;
+            var ex = cx + this.gridRemWidth - 1;
             ctx.imageSmoothingEnabled = false;
             ry = (y - sy) * tileSize;
             rx = (x - sx) * tileSize;
@@ -225,7 +232,7 @@
     // For example, a character sprite would have frames
     // for animating the character walking in various directions.
     //
-    var HeroSprite = function(frames) {
+    var HeroSprite = function(frames, map) {
         this.anims = {
             walk_left_1: 0,
             walk_left_2: 1,
@@ -249,6 +256,8 @@
             var key = name.substring(0, name.lastIndexOf('.'));
             this.frames[key] = frames[name];
         }
+
+        this.map = map;
 
         this.scale = 2;
         this.frameDuration = 1;
@@ -282,6 +291,10 @@
         this.frameQueue.unshift(frame);
     };
 
+    HeroSprite.prototype.clearQueue = function() {
+        this.frameQueue = [];
+    };
+
     // Checks if sprite has any frames to animate.
     HeroSprite.prototype.hasFrames = function() {
         return this.frameQueue.length != 0;
@@ -309,18 +322,17 @@
 
     // Draws the hero facing right. The map is used to check if the
     // character is allowed to make the move.
-    HeroSprite.prototype.faceRight = function(map) {
+    HeroSprite.prototype.faceRight = function() {
         this.frameQueue.unshift([this.frames.face_right, this.x, this.y, 0]);
 
     };
 
     // Draws character moving right.
-    HeroSprite.prototype.moveRight = function(map) {
-        var mapLen = map[0].length;
+    HeroSprite.prototype.moveRight = function() {
         var frames = this.frames;
         var y = this.y;
         var x = this.x + 1;
-        if (x < mapLen && map[y][x] == 0) {
+        if (x < this.map.length && this.map[y][x] == 0) {
             this.x = x;
             this.frameQueue.unshift([frames.walk_right_1, x - 0.9, y, this.frameDuration]);
             this.frameQueue.unshift([frames.walk_right_1, x - 0.8, y, this.frameDuration]);
@@ -333,22 +345,21 @@
             this.frameQueue.unshift([frames.walk_right_2, x - 0.1, y, this.frameDuration]);
             this.frameQueue.unshift([frames.face_right, x, y, 0]);
         } else {
-            this.faceRight(map);
+            this.faceRight();
         }
     };
 
     // Draws character facing left.
-    HeroSprite.prototype.faceLeft = function(map) {
+    HeroSprite.prototype.faceLeft = function() {
         this.frameQueue.unshift([this.frames.face_left, this.x, this.y, 0]);
     };
 
     // Draws character moving left.
-    HeroSprite.prototype.moveLeft = function(map) {
-        var mapLen = map[0].length;
+    HeroSprite.prototype.moveLeft = function() {
         var frames = this.frames;
         var y = this.y;
         var x = this.x - 1;
-        if (x >= 0 && map[y][x] == 0) {
+        if (x >= 0 && this.map[y][x] == 0) {
             this.x = x;
             this.frameQueue.unshift([frames.walk_left_1, x + 0.9, y, this.frameDuration]);
             this.frameQueue.unshift([frames.walk_left_1, x + 0.8, y, this.frameDuration]);
@@ -361,22 +372,21 @@
             this.frameQueue.unshift([frames.walk_left_2, x + 0.1, y, this.frameDuration]);
             this.frameQueue.unshift([frames.face_left, x, y, 0]);
         } else {
-            this.faceLeft(map);
+            this.faceLeft();
         }
     };
 
     // Draws character facing up.
-    HeroSprite.prototype.faceUp = function(map) {
+    HeroSprite.prototype.faceUp = function() {
         this.frameQueue.unshift([this.frames.face_up, this.x, this.y, 0]);
     };
 
     // Draws character moving up.
-    HeroSprite.prototype.moveUp = function(map) {
-        var mapLen = map.length;
+    HeroSprite.prototype.moveUp = function() {
         var frames = this.frames;
         var x = this.x;
         var y = this.y - 1;
-        if (y >= 0 && map[y][x] == 0) {
+        if (y >= 0 && this.map[y][x] == 0) {
             this.y = y;
             this.frameQueue.unshift([frames.walk_up_1, x, y + 0.9, this.frameDuration]);
             this.frameQueue.unshift([frames.walk_up_1, x, y + 0.8, this.frameDuration]);
@@ -389,22 +399,46 @@
             this.frameQueue.unshift([frames.walk_up_2, x, y + 0.1, this.frameDuration]);
             this.frameQueue.unshift([frames.face_up, x, y, 0]);
         } else {
-            this.faceUp(map);
+            this.faceUp();
         }
     };
 
     // Draws character facing down.
-    HeroSprite.prototype.faceDown = function(map) {
+    HeroSprite.prototype.faceDown = function() {
         this.frameQueue.unshift([this.frames.face_down, this.x, this.y, 0]);
     };
 
+    // Draws attack animation.
+    //
+    // Not sure if all the animations belong here.
+    HeroSprite.prototype.attack = function() {
+        this.moveLeft();
+        var frames = this.frames;
+        this.frameQueue.unshift([frames.attack_1, this.x, this.y, 10]);
+        this.frameQueue.unshift([frames.attack_2, this.x-1, this.y, 15]);
+        this.frameQueue.unshift([frames.face_left, this.x, this.y, 0]);
+        var x = this.x + 1;
+        var y = this.y;
+        this.frameQueue.unshift([frames.walk_left_1, x - 0.9, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_1, x - 0.8, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_1, x - 0.7, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x - 0.6, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x - 0.5, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x - 0.4, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_2, x - 0.3, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_2, x - 0.2, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_2, x - 0.1, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x, y, 0]);
+        this.x = x;
+    };
+
+
     // Draws character moving down.
-    HeroSprite.prototype.moveDown = function(map) {
-        var mapLen = map.length;
+    HeroSprite.prototype.moveDown = function() {
         var frames = this.frames;
         var x = this.x;
         var y = this.y + 1;
-        if (y < mapLen && map[y][x] == 0) {
+        if (y < this.map.length && this.map[y][x] == 0) {
             this.y = y;
             this.frameQueue.unshift([frames.walk_down_1, x, y - 0.9, this.frameDuration]);
             this.frameQueue.unshift([frames.walk_down_1, x, y - 0.8, this.frameDuration]);
@@ -417,7 +451,7 @@
             this.frameQueue.unshift([frames.walk_down_2, x, y - 0.1, this.frameDuration]);
             this.frameQueue.unshift([frames.face_down, x, y, 0]);
         } else {
-            this.faceDown(map);
+            this.faceDown();
         }
     };
 
@@ -432,17 +466,21 @@
     var GameEngine = function(el, options) {
         this.options = $.extend({
             mapUrl: 'map.json',
+            combatMapUrl: 'combatMap.json',
             spriteSheetUrl: 'sprites.png',
             spriteSheetMetaUrl: 'sprites.json',
             tileSize: 64,
-            screenWidth: 10,
-            screenHeight: 8
+            gridWidth: 10,
+            gridHeight: 8
         }, options);
 
         this.el = el;
         this.$el = $(el);
 
+        this.mode = GameMode.EXPLORE;
+
         this.map = null;
+        this.combatMap = null;
         this.frames = null;
         this.spriteSheet = null;
 
@@ -474,11 +512,16 @@
             self.map = data;
             self.onAssetsLoad();
         });
+
+        $.getJSON(self.options.combatMapUrl, function(data) {
+            self.combatMap = data;
+            self.onAssetsLoad();
+        });
     };
 
     // Once external assets are loaded, everything else is initialized.
     GameEngine.prototype.onAssetsLoad = function() {
-        if (this.spriteSheet.naturalWidth && this.frames && this.map) {
+        if (this.spriteSheet.naturalWidth && this.frames && this.map && this.combatMap) {
             this.initCanvas();
             this.initTiles();
             this.initSprites();
@@ -493,8 +536,8 @@
         var canvas = this.canvas = document.createElement('canvas');
         var ctx = this.ctx = canvas.getContext('2d');
 
-        var canvasWidth = this.options.tileSize * this.options.screenWidth;
-        var canvasHeight = this.options.tileSize * this.options.screenHeight;
+        var canvasWidth = this.options.tileSize * this.options.gridWidth;
+        var canvasHeight = this.options.tileSize * this.options.gridHeight;
 
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
@@ -505,6 +548,7 @@
     // Initialize tiles and background renderer.
     //
     // For now, will need to edit or override this method to change/add tiles.
+    //
     GameEngine.prototype.initTiles = function() {
         this.tileLookup = [
             'grass',
@@ -520,21 +564,31 @@
 
         this.bgRenderer = new BgRenderer(
             this.map, this.tileLookup, this.tileFactory,
-            this.options.tileSize, this.options.screenWidth, this.options.screenHeight);
+            this.options.tileSize, this.options.gridWidth, this.options.gridHeight);
     };
 
     // Initialize sprite renderer.
     GameEngine.prototype.initSprites = function() {
         this.spriteRenderer = new SpriteRenderer(
             this.map, this.spriteSheet,
-            this.options.tileSize, this.options.screenWidth, this.options.screenHeight);
+            this.options.tileSize, this.options.gridWidth, this.options.gridHeight);
     };
 
     // Initialize hero sprite.
     GameEngine.prototype.initHero = function() {
-        this.heroSprite = new HeroSprite(
-            this.frames, this.spriteSheet, this.map, this.options.tileSize);
-        this.heroSprite.faceRight(this.map);
+        this.heroSprite = new HeroSprite(this.frames, this.map);
+        this.heroSprite.faceRight();
+    };
+
+    // TODO(richard-to): Sprite not position correctly when x > 4.
+    GameEngine.prototype.initCombatMode = function() {
+        this.mode = GameMode.COMBAT;
+        this.heroSprite.clearQueue();
+        this.bgRenderer.map = this.combatMap;
+        this.heroSprite.map = this.combatMap;
+        this.heroSprite.x = this.options.gridWidth;
+        this.heroSprite.y = 3;
+        this.heroSprite.faceLeft();
     };
 
     // Animation/Game loop.
@@ -555,26 +609,31 @@
     GameEngine.prototype.initKeyListener = function() {
         var self = this;
         this.$el.keydown(function(e) {
-            if (self.keyWait) {
+            if (self.mode == GameMode.EXPLORE) {
+                if (self.keyWait) {
+                    return;
+                }
+
+                if (e.which == Control.RIGHT) {
+                    self.heroSprite.moveRight();
+                } else if (e.which == Control.LEFT) {
+                    self.heroSprite.moveLeft();
+                } else if (e.which == Control.UP) {
+                    self.heroSprite.moveUp();
+                } else if (e.which == Control.DOWN) {
+                    self.heroSprite.moveDown();
+                } else if (e.which == Control.PAUSE) {
+                    self.initCombatMode();
+                } else {
+                    return;
+                }
+                self.keyWait = true;
                 e.preventDefault();
-                return;
+            } else if (self.mode == GameMode.COMBAT) {
+                if (e.which == Control.ATTACK) {
+                    self.heroSprite.attack();
+                }
             }
-
-            if (e.which == Control.RIGHT) {
-                self.heroSprite.moveRight(self.map);
-            } else if (e.which == Control.LEFT) {
-                self.heroSprite.moveLeft(self.map);
-            } else if (e.which == Control.UP) {
-                self.heroSprite.moveUp(self.map);
-            } else if (e.which == Control.DOWN) {
-                self.heroSprite.moveDown(self.map);
-            } else if (e.which == Control.PAUSE) {
-
-            } else {
-                return;
-            }
-            self.keyWait = true;
-            e.preventDefault();
         });
     };
 
