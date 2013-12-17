@@ -58,6 +58,10 @@ body {
     width: 100%;
 }
 
+.entity-status .selected {
+    color: #ffe500;
+}
+
 .entity-status .name {
     width: 45%;
 }
