@@ -11,7 +11,6 @@
         handleHover: function(entity, event) {
             this.props.onEnemyHover(entity, event);
         },
-
         render: function() {
             var self = this;
             var createItem = function(entity) {
@@ -65,14 +64,25 @@
 
     var PartyMenu = React.createClass({
         render: function() {
+            var selectedEntity = this.props.selected;
             var createItem = function(entity) {
-                return (
-                    <tr>
-                        <td className="name">{entity.attr.name}</td>
-                        <td className="hp">{entity.attr.hp}/{entity.attr.hpMax}</td>
-                        <td className="mp">{entity.attr.mp}/{entity.attr.mpMax}</td>
-                    </tr>
-                )
+                if (selectedEntity == entity) {
+                    return (
+                        <tr>
+                            <td className="name selected">{entity.attr.name}</td>
+                            <td className="hp">{entity.attr.hp}/{entity.attr.hpMax}</td>
+                            <td className="mp">{entity.attr.mp}/{entity.attr.mpMax}</td>
+                        </tr>
+                    );
+                } else {
+                    return (
+                        <tr>
+                            <td className="name">{entity.attr.name}</td>
+                            <td className="hp">{entity.attr.hp}/{entity.attr.hpMax}</td>
+                            <td className="mp">{entity.attr.mp}/{entity.attr.mpMax}</td>
+                        </tr>
+                    );
+                }
             };
             return (
                 <div className="party-wrap">
@@ -86,63 +96,102 @@
     combat.PartyMenu = PartyMenu;
 
 
+    var MenuContext = {
+        NO_ACTIONS: 0,
+        SELECT_ACTION: 1,
+        SELECT_ENEMY: 2
+    };
+
     var App = React.createClass({
         getInitialState: function() {
-            return {showActions: 1, eturn: 0, hturn: 0};
+            return {showActions: MenuContext.SELECT_ACTION, enemyTurn: 0, partyTurn: 0};
+        },
+        componentDidMount: function() {
+             this.props.partySprites[this.state.partyTurn].showHighlight();
         },
         handleActionSelect: function(event) {
-            this.setState({showActions: 2});
+            this.setState({showActions: MenuContext.SELECT_ENEMY});
         },
         handleEnemySelect: function(entity, event) {
             var self = this;
-            var hturn = this.state.hturn;
-            if (hturn < this.props.party.length) {
-                entity.takeDamage(this.props.party[hturn].attack());
-                this.props.gameState.partyTurn = null;
-                this.props.gameState.selectedEnemy = null;
-                this.setState({showActions: 0});
-                this.props.heroSprites[hturn].attackLeft(function() {
-                    if (hturn < self.props.party.length) {
-                        self.setState({showActions: 1});
+            var partyTurn = this.state.partyTurn;
+            if (partyTurn < this.props.party.length) {
+                entity.takeDamage(this.props.party[partyTurn].attack());
+                this.setState({showActions: MenuContext.NO_ACTIONS});
+                this.props.partySprites[this.state.partyTurn].hideHighlight();
+                var attackValue = self.props.party[partyTurn].attr.attack;
+                this.props.partySprites[partyTurn].attackLeft(function() {
+
+                    var enemies = self.props.enemies;
+                    var enemyCount = enemies.length;
+                    for (var i = 0; i < enemyCount; i++) {
+                        self.props.enemySprites[i].hideHighlight();
+                        if (enemies[i] == entity) {
+                            self.props.enemySprites[i].damageSprite.damage = attackValue;
+                            self.props.enemySprites[i].damageSprite.disabled = false;
+                        }
+                    }
+
+                    if (partyTurn < self.props.party.length) {
+                        self.props.partySprites[self.state.partyTurn].showHighlight();
+                        self.setState({showActions: MenuContext.SELECT_ACTION});
                     } else {
                         self.runEnemyAttackSequence();
                     }
                 });
-                this.setState({hturn: ++hturn});
+                this.setState({partyTurn: ++partyTurn});
             }
         },
         runEnemyAttackSequence: function() {
             var self = this;
-            var eturn = this.state.eturn;
-            if (eturn < this.props.sprites.length) {
-                this.props.party[0].takeDamage(this.props.enemies[eturn].attack());
-                this.props.sprites[eturn].attackRight(this.runEnemyAttackSequence);
-                this.setState({eturn: ++eturn});
+            var enemyTurn = this.state.enemyTurn;
+            if (enemyTurn < this.props.enemySprites.length) {
+                this.props.party[0].takeDamage(this.props.enemies[enemyTurn].attack());
+                var attackValue = this.props.enemies[enemyTurn].attack();
+                this.props.enemySprites[enemyTurn].attackRight(function() {
+                    for (var i = 0; i < self.props.party.length; i++) {
+                        if (self.props.party[i] == self.props.party[0]) {
+                            self.props.partySprites[i].damageSprite.damage = attackValue;
+                            self.props.partySprites[i].damageSprite.disabled = false;
+                        }
+                    }
+                    self.runEnemyAttackSequence();
+                });
+                this.setState({enemyTurn: ++enemyTurn});
             } else {
-                this.setState({eturn: 0});
-                this.setState({showActions: 1});
-                this.setState({hturn: 0});
+                this.setState({enemyTurn: 0});
+                this.setState({partyTurn: 0});
+                this.props.partySprites[this.state.partyTurn].showHighlight();
+                this.setState({showActions: MenuContext.SELECT_ACTION});
             }
         },
         handleEnemyHover: function(entity, event) {
-            this.props.gameState.selectedEnemy = entity;
+            var enemies = this.props.enemies;
+            var enemyCount = enemies.length;
+            for (var i = 0; i < enemyCount; i++) {
+                if (enemies[i] === entity) {
+                    this.props.enemySprites[i].showHighlight();
+                } else {
+                    this.props.enemySprites[i].hideHighlight();
+                }
+            }
         },
         render: function() {
-            if (this.state.showActions == 1) {
+            if (this.state.showActions == MenuContext.SELECT_ACTION) {
                 return (
                     <div className="combat-wrap">
                         <ActionMenu onActionSelect={this.handleActionSelect} />
-                        <PartyMenu party={this.props.party} />
+                        <PartyMenu party={this.props.party} selected={this.props.party[this.state.partyTurn]} />
                     </div>
                 );
-            } else if (this.state.showActions == 2) {
+            } else if (this.state.showActions == MenuContext.SELECT_ENEMY) {
                 return (
                     <div className="combat-wrap">
                         <EnemyMenu
                             enemies={this.props.enemies}
                             onEnemySelect={this.handleEnemySelect}
                             onEnemyHover={this.handleEnemyHover} />
-                        <PartyMenu party={this.props.party} />
+                        <PartyMenu party={this.props.party} selected={this.props.party[this.state.partyTurn]} />
                     </div>
                 );
             } else {

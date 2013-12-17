@@ -156,18 +156,21 @@
         this.partySprites = [];
         this.enemySprites = [];
         this.heroSprite = null;
+        this.party = null;
+        this.enemies = null;
     };
 
     // Loads the assets needed to run this aspect of the game.
-    CombatLevel.prototype.load = function(onLoad, datastore) {
+    CombatLevel.prototype.load = function(onLoad, datastore, party) {
         var self = this;
+        this.party = party;
         datastore.load(this.options.assets, function() {
             for (var key in self.options.assets) {
                 if (self[key] === null) {
                     self[key] = datastore.get(self.options.assets[key]);
                 }
             }
-            self.onAssetsLoad();
+            self.onAssetsLoad(party);
             onLoad();
         });
     };
@@ -219,55 +222,49 @@
     // Initializes party members.
     // TODO(richard-to): Add party members dynamically.
     CombatLevel.prototype.initParty = function() {
-        var partyMember = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map);
-        partyMember.x = 8;
-        partyMember.y = 4;
-        partyMember.faceLeft();
-        this.partySprites.push(partyMember);
-        this.sprites.unshift(partyMember);
+        for (var i = 1; i < this.party.length; i++) {
+            var partyMember = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map);
+            partyMember.x = 8;
+            partyMember.y = 2 + i * 2;
+            partyMember.faceLeft();
+            this.partySprites.push(partyMember);
+            this.sprites.unshift(partyMember);
+        }
     };
 
-    // Initializes enemy sprites.
+    // Initializes enemies.
     // TODO(richard-to): Randomly generate enemies.
     CombatLevel.prototype.initEnemies = function() {
-        var enemy1 = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map);
-        enemy1.x = 1;
-        enemy1.y = 2;
-        enemy1.faceRight();
 
-        var enemy2 = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map);
-        enemy2.x = 1;
-        enemy2.y = 4;
-        enemy2.faceRight();
+        var orc1 = new rpg.entity.Enemy({id: 'e1', name: "Orc 1"});
+        var orc2 = new rpg.entity.Enemy({id: 'e2', name: "Orc 2"});
+        this.enemies = [orc1, orc2];
 
-        this.enemySprites = [enemy1, enemy2];
-        this.sprites.unshift(enemy1);
-        this.sprites.unshift(enemy2);
+        var orc1Sprite = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map, true);
+        orc1Sprite.x = 1;
+        orc1Sprite.y = 2;
+        orc1Sprite.faceRight();
+
+        var orc2Sprite = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map, true);
+        orc2Sprite.x = 1;
+        orc2Sprite.y = 4;
+        orc2Sprite.faceRight();
+
+        this.enemySprites = [orc1Sprite, orc2Sprite];
+        this.sprites.unshift(orc1Sprite);
+        this.sprites.unshift(orc2Sprite);
     };
 
     // Initializes combat menu.
     // TODO(richard-to): Dynamically load party and enemy entities.
     CombatLevel.prototype.initMenu = function() {
-
-        var hero = new rpg.entity.Player({id: 'h1', name: "Hero"});
-        var hero2 = new rpg.entity.Player({id: 'h2', name: "Hero 2"});
-        var orc1 = new rpg.entity.Enemy({id: 'e1', name: "Orc 1"});
-        var orc2 = new rpg.entity.Enemy({id: 'e2', name: "Orc 2"});
-
-        var party = [hero, hero2];
-        var enemies = [orc1, orc2];
-
-        var gameState = {
-            partyTurn: hero,
-            enemyTurn: false,
-            selectedEnemy: null,
-            party: party,
-            enemies: enemies,
-        };
         var CombatApp = rpg.combat.App;
         React.renderComponent(
-            <CombatApp party={party} gameState={gameState} enemies={enemies}
-                heroSprites={this.partySprites} sprites={this.enemySprites} />,
+            <CombatApp
+                party={this.party}
+                enemies={this.enemies}
+                partySprites={this.partySprites}
+                enemySprites={this.enemySprites} />,
             document.getElementById(this.options.menuDiv)
         );
     };
@@ -330,10 +327,15 @@
         }, options);
         this.datastore = new rpg.util.Datastore();
 
+        this.party = [
+            new rpg.entity.Player({id: 'h1', name: "Hero"}),
+            new rpg.entity.Player({id: 'h2', name: "Hero 2"}),
+        ];
+
         this.levelConfig = {
             exploration: new GameLevel(null, this.options.tileSize, this.options.gridWidth, this.options.gridHeight),
             combat: new CombatLevel(null, this.options.tileSize, this.options.gridWidth, this.options.gridHeight),
-            combatProbability: 0.2
+            combatProbability: 0.1
         };
 
         this.level = null;
@@ -371,7 +373,7 @@
         this.level.load(function() {
             self.animLoop = new AnimLoop(self.ctx, self.level);
             self.animLoop.animate();
-        }, this.datastore);
+        }, this.datastore, this.party);
     };
 
     // Pauses global key listener.

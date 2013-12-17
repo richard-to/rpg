@@ -39,6 +39,90 @@
     graphics.SpriteTile = SpriteTile;
 
 
+    var SpriteHighlightEffect = function(options) {
+        this.options = $.extend({
+            frameDuration: 30,
+            fillColor: '#4fb3c6',
+            strokeColor: '#a2e4ef',
+            lineWidth: 3,
+            alphaNormal: 0.7,
+            alphaFlash: 0.8,
+            radius: 12
+        }, options);
+        this.currentAlpha = this.options.alphaNormal;
+        this.frameCount = 0;
+        this.circlePi = 2 * Math.PI;
+    };
+
+    SpriteHighlightEffect.prototype.draw = function(ctx, x, y, tileSize, scale) {
+        var radius = this.options.radius * scale;
+        var alpha = this.currentAlpha;
+
+        ctx.beginPath();
+        ctx.globalAlpha = alpha;
+
+        ctx.arc(
+            x * tileSize + tileSize / 2,
+            y * tileSize + tileSize - radius,
+            radius, 0, this.circlePi, false);
+        ctx.fillStyle = this.options.fillColor;
+        ctx.fill();
+
+        ctx.lineWidth = this.options.lineWidth;
+        ctx.strokeStyle = this.options.strokeColor;
+        ctx.stroke();
+
+        ctx.globalAlpha = 1.0;
+
+        if (this.frameCount > this.options.frameDuration) {
+            if (this.currentAlpha == this.options.alphaNormal) {
+                this.currentAlpha = this.options.alphaFlash;
+            } else {
+                this.currentAlpha = this.options.alphaNormal;
+            }
+            this.frameCount = 0;
+        } else {
+            this.frameCount++;
+        }
+    };
+
+    var SpriteDamageEffect = function(options) {
+        this.options = $.extend({
+            frameDuration: 30,
+            fillColor: '#fff',
+            font: '12pt monospace',
+            textAlign: 'center'
+        }, options);
+        this.frameCount = 0;
+        this.damage = 99;
+        this.disabled = true;
+        this.circlePi = 2 * Math.PI;
+    };
+
+    SpriteDamageEffect.prototype.draw = function(ctx, x, y, tileSize, scale) {
+        ctx.font = this.options.font;
+        ctx.fillStyle = '#000';
+        ctx.textAlign = this.options.textAlign;
+        ctx.fillText(
+            this.damage.toString(),
+            x * tileSize + tileSize / 2,
+            y * tileSize + tileSize);
+
+        ctx.fillStyle = this.options.fillColor;
+        ctx.textAlign = this.options.textAlign;
+        ctx.fillText(
+            this.damage.toString(),
+            x * tileSize + tileSize / 2 - 1.5,
+            y * tileSize + tileSize - 1);
+
+
+        if (this.frameCount > this.options.frameDuration) {
+            this.disabled = true;
+            this.frameCount = 0;
+        } else {
+            this.frameCount++;
+        }
+    };
     // Animated character sprite.
     //
     // The frames parameter contains metadata about
@@ -47,7 +131,7 @@
     // For example, a character sprite would have frames
     // for animating the character walking in various directions.
     //
-    var SpriteAnim = function(frames, map) {
+    var SpriteAnim = function(frames, map, enemy) {
         this.anims = {
             walk_left_1: 0,
             walk_left_2: 1,
@@ -83,6 +167,17 @@
         this.y = 1;
         this.frameQueue = [];
         this.lastFrame = null;
+
+        this.highight = false;
+        if (enemy) {
+            this.highightSprite = new SpriteHighlightEffect({
+                fillColor: '#c9545e',
+                strokeColor: '#f27979'
+            });
+        } else {
+            this.highightSprite = new SpriteHighlightEffect();
+        }
+        this.damageSprite = new SpriteDamageEffect();
     };
 
     // Queue up a frame that will be animated by SpriteRenderer.
@@ -295,6 +390,15 @@
         this.frameQueue.unshift([frames.face_right, x, y, 0]);
         this.x = x;
     };
+
+    SpriteAnim.prototype.showHighlight = function() {
+        this.highight = true;
+    };
+
+    SpriteAnim.prototype.hideHighlight = function() {
+        this.highight = false;
+    };
+
     graphics.SpriteAnim = SpriteAnim;
 
 
@@ -481,6 +585,15 @@
         ctx.imageSmoothingEnabled = false;
         ry = (y - sy) * tileSize;
         rx = (x - sx) * tileSize;
+
+        if (sprite.highight) {
+            sprite.highightSprite.draw(ctx, (x - sx), (y - sy), tileSize, scale);
+        }
+
+        if (sprite.damageSprite.disabled === false) {
+            sprite.damageSprite.draw(ctx, (x - sx), (y - sy), tileSize, scale);
+        }
+
         ctx.drawImage(spriteSheet,
             frame.x, frame.y, frame.w, frame.h,
             (frame.w * scale - tileSize) / 2 + (x - sx) * tileSize,
