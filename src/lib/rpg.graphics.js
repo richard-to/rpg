@@ -32,9 +32,11 @@
     // Draws sprite tile on canvas.
     SpriteTile.prototype.draw = function(ctx, x, y, tileSize) {
         var frame = this.frame;
+        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(this.spriteSheet,
             frame.x, frame.y, frame.w, frame.h,
             x, y, tileSize, tileSize);
+        ctx.imageSmoothingEnabled = true;
     };
     graphics.SpriteTile = SpriteTile;
 
@@ -123,6 +125,154 @@
             this.frameCount++;
         }
     };
+
+
+    // Animated character sprite.
+    //
+    // The frames parameter contains metadata about
+    // how to render the sprite from the spritesheet.
+    //
+    // For example, a character sprite would have frames
+    // for animating the character walking in various directions.
+    //
+    var SpriteEnemy = function(frame, map, enemy) {
+        this.frames = [];
+        this.frames.push(frame);
+
+        this.map = map;
+
+        this.scale = 2;
+        this.frameDuration = 1;
+
+        this.x = 0;
+        this.y = 1;
+        this.frameQueue = [];
+        this.lastFrame = null;
+
+        this.faceRight();
+
+        this.highight = false;
+        if (enemy) {
+            this.highightSprite = new SpriteHighlightEffect({
+                fillColor: '#c9545e',
+                strokeColor: '#f27979'
+            });
+        } else {
+            this.highightSprite = new SpriteHighlightEffect();
+        }
+        this.damageSprite = new SpriteDamageEffect();
+    };
+
+
+    // Queue up a frame that will be animated by SpriteRenderer.
+    //
+    // The frame parameter here is not the same as the the frames
+    // object passed in to the SpriteAnim constructor.
+    //
+    // The frame format is as follows (very tentative)
+    // [
+    //      This parameter is a frame from this.frames object,
+    //      Next up is the x position on grid,
+    //      Followed by y position on grid,
+    //      Duration to display this frame. Or how many times to display frame.
+    // ]
+    //
+    // Example:
+    //  [frames.walk_right_1, x - 0.9, y, this.frameDuration]
+    //
+    SpriteEnemy.prototype.queue = function(frame) {
+        this.frameQueue.unshift(frame);
+    };
+
+    SpriteEnemy.prototype.clearQueue = function() {
+        this.frameQueue = [];
+    };
+
+    // Checks if sprite has any frames to animate.
+    SpriteEnemy.prototype.hasFrames = function() {
+        return this.frameQueue.length != 0;
+    };
+
+    // Gets the x position of the sprite.
+    SpriteEnemy.prototype.getX = function() {
+        var frameQueue = this.frameQueue;
+        if (frameQueue.length > 0) {
+            return frameQueue[frameQueue.length - 1][1];
+        } else {
+            return this.x;
+        }
+    };
+
+    // Gets the y position of the sprite.
+    SpriteEnemy.prototype.getY = function() {
+        var frameQueue = this.frameQueue;
+        if (frameQueue.length > 0) {
+            return frameQueue[frameQueue.length - 1][2];
+        } else {
+            return this.y;
+        }
+    };
+
+    SpriteEnemy.prototype.showHighlight = function() {
+        this.highight = true;
+    };
+
+    SpriteEnemy.prototype.hideHighlight = function() {
+        this.highight = false;
+    };
+
+    // Draws character moving left.
+    SpriteEnemy.prototype.moveRight = function() {
+        var frames = this.frames;
+        var y = this.y;
+        var x = this.x + 1;
+        if (x >= 0 && this.map[y][x] >= 0) {
+            this.x = x;
+            this.frameQueue.unshift([frames[0], x - 0.9, y, this.frameDuration]);
+            this.frameQueue.unshift([frames[0], x - 0.8, y, this.frameDuration]);
+            this.frameQueue.unshift([frames[0], x - 0.7, y, this.frameDuration]);
+            this.frameQueue.unshift([frames[0], x - 0.6, y, this.frameDuration]);
+            this.frameQueue.unshift([frames[0], x - 0.5, y, this.frameDuration]);
+            this.frameQueue.unshift([frames[0], x - 0.4, y, this.frameDuration]);
+            this.frameQueue.unshift([frames[0], x - 0.3, y, this.frameDuration]);
+            this.frameQueue.unshift([frames[0], x - 0.2, y, this.frameDuration]);
+            this.frameQueue.unshift([frames[0], x - 0.1, y, this.frameDuration]);
+            this.frameQueue.unshift([frames[0], x, y, 0]);
+        } else {
+            this.faceLeft();
+        }
+    };
+
+    // Draws attack animation.
+    //
+    // Not sure if all the animations belong here.
+    //
+    SpriteEnemy.prototype.attackRight = function(callback) {
+        this.callback = callback;
+        this.moveRight();
+        var frames = this.frames;
+        var x = this.x - 1;
+        var y = this.y;
+        this.frameQueue.unshift([frames[0], x + 0.9, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.8, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.7, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.6, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.5, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.4, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.3, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.2, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.1, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x, y, 0]);
+        this.x = x;
+    };
+
+    // Draws the sprite facing right. The map is used to check if the
+    // character is allowed to make the move.
+    SpriteEnemy.prototype.faceRight = function() {
+        this.frameQueue.unshift([this.frames[0], this.x, this.y, 0]);
+    };
+    graphics.SpriteEnemy = SpriteEnemy;
+
     // Animated character sprite.
     //
     // The frames parameter contains metadata about
@@ -233,7 +383,6 @@
     // character is allowed to make the move.
     SpriteAnim.prototype.faceRight = function() {
         this.frameQueue.unshift([this.frames.face_right, this.x, this.y, 0]);
-
     };
 
     // Draws character moving right.
@@ -241,7 +390,7 @@
         var frames = this.frames;
         var y = this.y;
         var x = this.x + 1;
-        if (x < this.map[0].length && this.map[y][x] == 0) {
+        if (x < this.map[0].length && this.map[y][x] >= 0) {
             this.x = x;
             this.frameQueue.unshift([frames.walk_right_1, x - 0.9, y, this.frameDuration]);
             this.frameQueue.unshift([frames.walk_right_1, x - 0.8, y, this.frameDuration]);
@@ -268,7 +417,7 @@
         var frames = this.frames;
         var y = this.y;
         var x = this.x - 1;
-        if (x >= 0 && this.map[y][x] == 0) {
+        if (x >= 0 && this.map[y][x] >= 0) {
             this.x = x;
             this.frameQueue.unshift([frames.walk_left_1, x + 0.9, y, this.frameDuration]);
             this.frameQueue.unshift([frames.walk_left_1, x + 0.8, y, this.frameDuration]);
@@ -295,7 +444,7 @@
         var frames = this.frames;
         var x = this.x;
         var y = this.y - 1;
-        if (y >= 0 && this.map[y][x] == 0) {
+        if (y >= 0 && this.map[y][x] >= 0) {
             this.y = y;
             this.frameQueue.unshift([frames.walk_up_1, x, y + 0.9, this.frameDuration]);
             this.frameQueue.unshift([frames.walk_up_1, x, y + 0.8, this.frameDuration]);
@@ -322,7 +471,7 @@
         var frames = this.frames;
         var x = this.x;
         var y = this.y + 1;
-        if (y < this.map.length && this.map[y][x] == 0) {
+        if (y < this.map.length && this.map[y][x] >= 0) {
             this.y = y;
             this.frameQueue.unshift([frames.walk_down_1, x, y - 0.9, this.frameDuration]);
             this.frameQueue.unshift([frames.walk_down_1, x, y - 0.8, this.frameDuration]);

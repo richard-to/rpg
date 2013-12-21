@@ -30,9 +30,35 @@
                 spritemeta: 'sprites.json',
             },
             tiles: {
-                grass: 'grass.png',
-                water: 'water2.png',
-                cliff: 'cliff.png'
+                grass: 'grass3.png',
+                water: 'water.png',
+                cliff: 'cliff2.png',
+                cliff_b_grass: 'cliff_b_grass.png',
+                cliff_l_grass: 'cliff_l_grass.png',
+                cliff_lb_grass: 'cliff_lb_grass.png',
+                cliff_lr_grass: 'cliff_lr_grass.png',
+                cliff_r_grass: 'cliff_r_grass.png',
+                cliff_rb_grass: 'cliff_rb_grass.png',
+                cliff_t_grass: 'cliff_t_grass.png',
+                cliff_tb_grass: 'cliff_tb_grass.png',
+                cliff_tl_grass: 'cliff_tl_grass.png',
+                cliff_tr_grass: 'cliff_tr_grass.png',
+                cliff_ltr_grass: 'cliff_ltr_grass.png',
+                cliff_tlb_grass: 'cliff_tlb_grass.png',
+                cliff_trb_grass: 'cliff_trb_grass.png',
+                cliff_grass: 'cliff_grass.png',
+                cliff_blr_grass: 'cliff_blr_grass.png',
+                grass_l_water: 'grass_l_water.png',
+                grass_r_water: 'grass_r_water.png',
+                grass_t_water: 'grass_t_water.png',
+                grass_b_water: 'grass_b_water.png',
+                grass_tl_water: 'grass_tl_water.png',
+                grass_tb_water: 'grass_tb_water.png',
+                grass_br_water: 'grass_br_water.png',
+                water_t_grass: 'water_t_grass.png',
+                cliff_br_water: 'cliff_br_water.png',
+                cliff_b_water: 'cliff_b_water.png',
+                cliff_l_water: 'cliff_l_water.png',
             },
         }, options);
 
@@ -132,9 +158,36 @@
                 spritemeta: 'sprites.json',
             },
             tiles: {
-                grass: 'grass.png',
-                water: 'water2.png',
-                cliff: 'cliff.png'
+                grass: 'grass3.png',
+                water: 'water.png',
+                cliff: 'cliff2.png',
+                cliff_b_grass: 'cliff_b_grass.png',
+                cliff_l_grass: 'cliff_l_grass.png',
+                cliff_lb_grass: 'cliff_lb_grass.png',
+                cliff_lr_grass: 'cliff_lr_grass.png',
+                cliff_r_grass: 'cliff_r_grass.png',
+                cliff_rb_grass: 'cliff_rb_grass.png',
+                cliff_t_grass: 'cliff_t_grass.png',
+                cliff_tb_grass: 'cliff_tb_grass.png',
+                cliff_tl_grass: 'cliff_tl_grass.png',
+                cliff_tr_grass: 'cliff_tr_grass.png',
+                cliff_ltr_grass: 'cliff_ltr_grass.png',
+                cliff_tlb_grass: 'cliff_tlb_grass.png',
+                cliff_trb_grass: 'cliff_trb_grass.png',
+                cliff_grass: 'cliff_grass.png',
+                cliff_blr_grass: 'cliff_blr_grass.png',
+                grass_l_water: 'grass_l_water.png',
+                grass_r_water: 'grass_r_water.png',
+                grass_t_water: 'grass_t_water.png',
+                grass_b_water: 'grass_b_water.png',
+                grass_tl_water: 'grass_tl_water.png',
+                grass_tb_water: 'grass_tb_water.png',
+                grass_br_water: 'grass_br_water.png',
+                water_t_grass: 'water_t_grass.png',
+                cliff_br_water: 'cliff_br_water.png',
+                cliff_b_water: 'cliff_b_water.png',
+                cliff_l_water: 'cliff_l_water.png',
+                grass_bl_water: 'grass_bl_water.png',
             },
             menuDiv: 'combat-menu-container'
         }, options);
@@ -240,13 +293,13 @@
         var orc2 = new rpg.entity.Enemy({id: 'e2', name: "Orc 2"});
         this.enemies = [orc1, orc2];
 
-        var orc1Sprite = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map, true);
+        var orc1Sprite = new rpg.graphics.SpriteEnemy(this.spritemeta.frames['eyeball.png'], this.map, true);
         orc1Sprite.x = 1;
         orc1Sprite.y = 2;
         orc1Sprite.faceRight();
 
-        var orc2Sprite = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map, true);
-        orc2Sprite.x = 1;
+        var orc2Sprite = new rpg.graphics.SpriteEnemy(this.spritemeta.frames['octo.png'], this.map, true);
+        orc2Sprite.x = 2;
         orc2Sprite.y = 4;
         orc2Sprite.faceRight();
 
@@ -275,10 +328,11 @@
 
 
     // Animation loop. Draws sprites and backgrounds in a continous loop.
-    var AnimLoop = function(ctx, level) {
+    var AnimLoop = function(ctx, canvas, level) {
         this.animStopped = false;
         this.keyWait = false;
         this.ctx = ctx;
+        this.canvas = canvas;
         this.heroSprite = level.heroSprite;
         this.sprites = level.sprites;
         this.bgRenderer = level.bgRenderer;
@@ -292,7 +346,7 @@
             return;
         }
         var self = this;
-
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.bgRenderer.draw(this.ctx, this.heroSprite.getX(), this.heroSprite.getY());
 
         this.sprites.forEach(function(sprite) {
@@ -359,7 +413,7 @@
         this.pauseKeyListener();
         this.level = this.levelConfig.exploration;
         this.level.load(function() {
-            self.animLoop = new AnimLoop(self.ctx, self.level);
+            self.animLoop = new AnimLoop(self.ctx, self.canvas, self.level);
             self.animLoop.animate();
             self.initExplorationControls();
         }, this.datastore);
@@ -371,7 +425,7 @@
         this.pauseKeyListener();
         this.level = this.levelConfig.combat;
         this.level.load(function() {
-            self.animLoop = new AnimLoop(self.ctx, self.level);
+            self.animLoop = new AnimLoop(self.ctx, self.canvas, self.level);
             self.animLoop.animate();
         }, this.datastore, this.party);
     };
