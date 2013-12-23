@@ -126,7 +126,6 @@
         }
     };
 
-
     // Animated character sprite.
     //
     // The frames parameter contains metadata about
@@ -282,37 +281,10 @@
     // for animating the character walking in various directions.
     //
     var SpriteAnim = function(frames, map, enemy) {
-        this.anims = {
-            walk_left_1: 0,
-            walk_left_2: 1,
-            face_left: 2,
-            walk_right_1: 3,
-            walk_right_2: 4,
-            face_right: 5,
-            walk_up_1: 6,
-            walk_up_2: 7,
-            face_up: 8,
-            walk_down_1: 9,
-            walk_down_2: 10,
-            face_down: 11,
-            attack_left_1: 12,
-            attack_left_2: 13,
-            attack_right_1: 12,
-            attack_right_2: 13,
-        };
-
-        this.frames = {};
-
-        for (var name in frames) {
-            var key = name.substring(0, name.lastIndexOf('.'));
-            this.frames[key] = frames[name];
-        }
-
+        this.frames = frames;
         this.map = map;
-
         this.scale = 2;
         this.frameDuration = 1;
-
         this.x = 0;
         this.y = 1;
         this.frameQueue = [];
@@ -522,8 +494,8 @@
         this.callback = callback;
         this.moveRight();
         var frames = this.frames;
-        this.frameQueue.unshift([frames.attack_right_1, this.x, this.y, 10]);
-        this.frameQueue.unshift([frames.attack_right_2, this.x+0.5, this.y, 15]);
+        this.frameQueue.unshift([frames.attack_1, this.x, this.y, 10]);
+        this.frameQueue.unshift([frames.attack_2, this.x+0.5, this.y, 15]);
         this.frameQueue.unshift([frames.face_right, this.x, this.y, 0]);
         var x = this.x - 1;
         var y = this.y;

@@ -20,6 +20,88 @@
     };
     window.rpg.GameMode = GameMode;
 
+    var heroesList = {
+        corrina: {
+            name: 'Corrina',
+            hp: 300,
+            hpMax: 300,
+            mp: 20,
+            mpMax: 20,
+            att: 20,
+            def: 5,
+            exp: 0,
+            level: 1,
+            frames: {
+                walk_left_1: 'corrina_walk_left_1.png',
+                walk_left_2: 'corrina_walk_left_2.png',
+                face_left: 'corrina_face_left.png',
+                walk_right_1: 'corrina_walk_right_1.png',
+                walk_right_2: 'corrina_walk_right_2.png',
+                face_right: 'corrina_face_right.png',
+                walk_up_1: 'corrina_walk_up_1.png',
+                walk_up_2: 'corrina_walk_up_2.png',
+                face_up: 'corrina_face_up.png',
+                walk_down_1: 'corrina_walk_down_1.png',
+                walk_down_2: 'corrina_walk_down_2.png',
+                face_down: 'corrina_face_down.png',
+                attack_left_1: 'corrina_attack_left_1.png',
+                attack_left_2: 'corrina_attack_left_2.png'
+            }
+        },
+        seth: {
+            name: 'Seth',
+            hp: 250,
+            hpMax: 250,
+            mp: 0,
+            mpMax: 0,
+            att: 30,
+            def: 2,
+            exp: 0,
+            level: 1,
+            frames: {
+                walk_left_1: 'seth_walk_left_1.png',
+                walk_left_2: 'seth_walk_left_2.png',
+                face_left: 'seth_face_left.png',
+                walk_right_1: 'seth_walk_right_1.png',
+                walk_right_2: 'seth_walk_right_2.png',
+                face_right: 'seth_face_right.png',
+                walk_up_1: 'seth_walk_up_1.png',
+                walk_up_2: 'seth_walk_up_2.png',
+                face_up: 'seth_face_up.png',
+                walk_down_1: 'seth_walk_down_1.png',
+                walk_down_2: 'seth_walk_down_2.png',
+                face_down: 'seth_face_down.png',
+                attack_left_1: 'seth_attack_left_1.png',
+                attack_left_2: 'seth_attack_left_2.png'
+            }
+        }
+    };
+
+    var enemiesList = [
+        {
+            name: "Eyeball Scout",
+            hp: 30,
+            hpMax: 30,
+            mp: 0,
+            mpMax: 0,
+            att: 5,
+            def: 5,
+            exp: 5,
+            sprite: 'eyeball.png'
+        },
+        {
+            name: "Evil Bear",
+            hp: 50,
+            hpMax: 50,
+            mp: 0,
+            mpMax: 0,
+            att: 10,
+            def: 5,
+            exp: 10,
+            sprite: 'bear.png'
+        },
+    ];
+
     // Not the best name, but currently manages the part of the game
     // where the player can move around the world.
     var GameLevel = function(options, tileSize, gridWidth, gridHeight) {
@@ -30,35 +112,36 @@
                 spritemeta: 'sprites.json',
             },
             tiles: {
-                grass: 'grass3.png',
+                grass: 'grass.png',
                 water: 'water.png',
-                cliff: 'cliff2.png',
+                cliff: 'cliff.png',
                 cliff_b_grass: 'cliff_b_grass.png',
                 cliff_l_grass: 'cliff_l_grass.png',
-                cliff_lb_grass: 'cliff_lb_grass.png',
-                cliff_lr_grass: 'cliff_lr_grass.png',
+                cliff_bl_grass: 'cliff_bl_grass.png',
+                cliff_rl_grass: 'cliff_rl_grass.png',
                 cliff_r_grass: 'cliff_r_grass.png',
                 cliff_rb_grass: 'cliff_rb_grass.png',
                 cliff_t_grass: 'cliff_t_grass.png',
                 cliff_tb_grass: 'cliff_tb_grass.png',
                 cliff_tl_grass: 'cliff_tl_grass.png',
                 cliff_tr_grass: 'cliff_tr_grass.png',
-                cliff_ltr_grass: 'cliff_ltr_grass.png',
-                cliff_tlb_grass: 'cliff_tlb_grass.png',
+                cliff_trl_grass: 'cliff_trl_grass.png',
+                cliff_tbl_grass: 'cliff_tbl_grass.png',
                 cliff_trb_grass: 'cliff_trb_grass.png',
-                cliff_grass: 'cliff_grass.png',
-                cliff_blr_grass: 'cliff_blr_grass.png',
+                cliff_trbl_grass: 'cliff_trbl_grass.png',
+                cliff_rbl_grass: 'cliff_rbl_grass.png',
                 grass_l_water: 'grass_l_water.png',
                 grass_r_water: 'grass_r_water.png',
                 grass_t_water: 'grass_t_water.png',
                 grass_b_water: 'grass_b_water.png',
                 grass_tl_water: 'grass_tl_water.png',
                 grass_tb_water: 'grass_tb_water.png',
-                grass_br_water: 'grass_br_water.png',
+                grass_rb_water: 'grass_rb_water.png',
                 water_t_grass: 'water_t_grass.png',
-                cliff_br_water: 'cliff_br_water.png',
+                cliff_bl_water: 'cliff_bl_water.png',
                 cliff_b_water: 'cliff_b_water.png',
-                cliff_l_water: 'cliff_l_water.png',
+                cliff_r_water: 'cliff_r_water.png',
+                grass_tb_water: 'grass_tb_water.png',
             },
         }, options);
 
@@ -126,7 +209,13 @@
 
     // Initializes hero sprite.
     GameLevel.prototype.initHero = function() {
-        this.heroSprite = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map);
+        var heroFrames = {};
+        for (var name in heroesList.corrina.frames) {
+            heroFrames[name] = this.spritemeta.frames[heroesList.corrina.frames[name]]
+        }
+        this.heroSprite = new rpg.graphics.SpriteAnim(heroFrames, this.map);
+        this.heroSprite.x = 0;
+        this.heroSprite.y = 1;
         this.heroSprite.faceRight();
         this.sprites.unshift(this.heroSprite);
     };
@@ -158,36 +247,36 @@
                 spritemeta: 'sprites.json',
             },
             tiles: {
-                grass: 'grass3.png',
+                grass: 'grass.png',
                 water: 'water.png',
-                cliff: 'cliff2.png',
+                cliff: 'cliff.png',
                 cliff_b_grass: 'cliff_b_grass.png',
                 cliff_l_grass: 'cliff_l_grass.png',
-                cliff_lb_grass: 'cliff_lb_grass.png',
-                cliff_lr_grass: 'cliff_lr_grass.png',
+                cliff_bl_grass: 'cliff_bl_grass.png',
+                cliff_rl_grass: 'cliff_rl_grass.png',
                 cliff_r_grass: 'cliff_r_grass.png',
                 cliff_rb_grass: 'cliff_rb_grass.png',
                 cliff_t_grass: 'cliff_t_grass.png',
                 cliff_tb_grass: 'cliff_tb_grass.png',
                 cliff_tl_grass: 'cliff_tl_grass.png',
                 cliff_tr_grass: 'cliff_tr_grass.png',
-                cliff_ltr_grass: 'cliff_ltr_grass.png',
-                cliff_tlb_grass: 'cliff_tlb_grass.png',
+                cliff_trl_grass: 'cliff_trl_grass.png',
+                cliff_tbl_grass: 'cliff_tbl_grass.png',
                 cliff_trb_grass: 'cliff_trb_grass.png',
-                cliff_grass: 'cliff_grass.png',
-                cliff_blr_grass: 'cliff_blr_grass.png',
+                cliff_trbl_grass: 'cliff_trbl_grass.png',
+                cliff_rbl_grass: 'cliff_rbl_grass.png',
                 grass_l_water: 'grass_l_water.png',
                 grass_r_water: 'grass_r_water.png',
                 grass_t_water: 'grass_t_water.png',
                 grass_b_water: 'grass_b_water.png',
                 grass_tl_water: 'grass_tl_water.png',
                 grass_tb_water: 'grass_tb_water.png',
-                grass_br_water: 'grass_br_water.png',
+                grass_rb_water: 'grass_rb_water.png',
                 water_t_grass: 'water_t_grass.png',
-                cliff_br_water: 'cliff_br_water.png',
+                cliff_rb_water: 'cliff_rb_water.png',
                 cliff_b_water: 'cliff_b_water.png',
-                cliff_l_water: 'cliff_l_water.png',
-                grass_bl_water: 'grass_bl_water.png',
+                cliff_r_water: 'cliff_r_water.png',
+                grass_tb_water: 'grass_tb_water.png',
             },
             menuDiv: 'combat-menu-container'
         }, options);
@@ -264,7 +353,11 @@
 
     // Initializes hero sprite.
     CombatLevel.prototype.initHero = function() {
-        this.heroSprite = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map);
+        var heroFrames = {};
+        for (var name in heroesList.corrina.frames) {
+            heroFrames[name] = this.spritemeta.frames[heroesList.corrina.frames[name]]
+        }
+        this.heroSprite = new rpg.graphics.SpriteAnim(heroFrames, this.map);
         this.heroSprite.x = 8;
         this.heroSprite.y = 2;
         this.heroSprite.faceLeft();
@@ -275,8 +368,12 @@
     // Initializes party members.
     // TODO(richard-to): Add party members dynamically.
     CombatLevel.prototype.initParty = function() {
+        var heroFrames = {};
+        for (var name in heroesList.seth.frames) {
+            heroFrames[name] = this.spritemeta.frames[heroesList.seth.frames[name]]
+        }
         for (var i = 1; i < this.party.length; i++) {
-            var partyMember = new rpg.graphics.SpriteAnim(this.spritemeta.frames, this.map);
+            var partyMember = new rpg.graphics.SpriteAnim(heroFrames, this.map);
             partyMember.x = 8;
             partyMember.y = 2 + i * 2;
             partyMember.faceLeft();
@@ -288,24 +385,28 @@
     // Initializes enemies.
     // TODO(richard-to): Randomly generate enemies.
     CombatLevel.prototype.initEnemies = function() {
-
-        var orc1 = new rpg.entity.Enemy({id: 'e1', name: "Orc 1"});
-        var orc2 = new rpg.entity.Enemy({id: 'e2', name: "Orc 2"});
-        this.enemies = [orc1, orc2];
-
-        var orc1Sprite = new rpg.graphics.SpriteEnemy(this.spritemeta.frames['eyeball.png'], this.map, true);
-        orc1Sprite.x = 1;
-        orc1Sprite.y = 2;
-        orc1Sprite.faceRight();
-
-        var orc2Sprite = new rpg.graphics.SpriteEnemy(this.spritemeta.frames['octo.png'], this.map, true);
-        orc2Sprite.x = 2;
-        orc2Sprite.y = 4;
-        orc2Sprite.faceRight();
-
-        this.enemySprites = [orc1Sprite, orc2Sprite];
-        this.sprites.unshift(orc1Sprite);
-        this.sprites.unshift(orc2Sprite);
+        var maxEnemies = 2;
+        var numEnemies = Math.floor((Math.random() * maxEnemies) + 1);
+        var enemies = [];
+        var enemySprites = [];
+        var x = 1;
+        var y = 2;
+        for (var i = 0; i < numEnemies; i++) {
+            var enemyType = (Math.floor((Math.random() * enemiesList.length)));
+            var enemyConfig = enemiesList[enemyType];
+            enemies.push(new rpg.entity.Enemy(enemyConfig));
+            var enemySprite = new rpg.graphics.SpriteEnemy(
+                this.spritemeta.frames[enemyConfig.sprite], this.map, true)
+            enemySprite.x = x;
+            enemySprite.y = y;
+            enemySprite.faceRight();
+            enemySprites.push(enemySprite);
+            this.sprites.unshift(enemySprite);
+            x += 1;
+            y += 2;
+        }
+        this.enemies = enemies;
+        this.enemySprites = enemySprites;
     };
 
     // Initializes combat menu.
@@ -382,8 +483,8 @@
         this.datastore = new rpg.util.Datastore();
 
         this.party = [
-            new rpg.entity.Player({id: 'h1', name: "Hero"}),
-            new rpg.entity.Player({id: 'h2', name: "Hero 2"}),
+            new rpg.entity.Player(heroesList.corrina),
+            new rpg.entity.Player(heroesList.seth),
         ];
 
         this.levelConfig = {
