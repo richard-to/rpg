@@ -1,6 +1,11 @@
 /** @jsx React.DOM */
 (function(window, undefined) {
+
     var rpg = window.rpg;
+    var combat = rpg.combat;
+    var graphics = rpg.graphics;
+    var entities = rpg.entities;
+    var util = rpg.util;
 
     // Constants for key controls.
     var Control = {
@@ -8,152 +13,63 @@
         UP: 38,
         RIGHT: 39,
         DOWN: 40,
-        PAUSE: 13,
-        ATTACK: 65
-    };
-    window.rpg.Control = Control;
-
-    // Game mode that we are in. Are we exploring or in combat?
-    var GameMode = {
-        EXPLORE: 0,
-        COMBAT: 1
-    };
-    window.rpg.GameMode = GameMode;
-
-    var heroesList = {
-        corrina: {
-            name: 'Corrina',
-            hp: 300,
-            hpMax: 300,
-            mp: 20,
-            mpMax: 20,
-            att: 20,
-            def: 5,
-            exp: 0,
-            level: 1,
-            frames: {
-                walk_left_1: 'corrina_walk_left_1.png',
-                walk_left_2: 'corrina_walk_left_2.png',
-                face_left: 'corrina_face_left.png',
-                walk_right_1: 'corrina_walk_right_1.png',
-                walk_right_2: 'corrina_walk_right_2.png',
-                face_right: 'corrina_face_right.png',
-                walk_up_1: 'corrina_walk_up_1.png',
-                walk_up_2: 'corrina_walk_up_2.png',
-                face_up: 'corrina_face_up.png',
-                walk_down_1: 'corrina_walk_down_1.png',
-                walk_down_2: 'corrina_walk_down_2.png',
-                face_down: 'corrina_face_down.png',
-                attack_left_1: 'corrina_attack_left_1.png',
-                attack_left_2: 'corrina_attack_left_2.png'
-            }
-        },
-        seth: {
-            name: 'Seth',
-            hp: 250,
-            hpMax: 250,
-            mp: 0,
-            mpMax: 0,
-            att: 30,
-            def: 2,
-            exp: 0,
-            level: 1,
-            frames: {
-                walk_left_1: 'seth_walk_left_1.png',
-                walk_left_2: 'seth_walk_left_2.png',
-                face_left: 'seth_face_left.png',
-                walk_right_1: 'seth_walk_right_1.png',
-                walk_right_2: 'seth_walk_right_2.png',
-                face_right: 'seth_face_right.png',
-                walk_up_1: 'seth_walk_up_1.png',
-                walk_up_2: 'seth_walk_up_2.png',
-                face_up: 'seth_face_up.png',
-                walk_down_1: 'seth_walk_down_1.png',
-                walk_down_2: 'seth_walk_down_2.png',
-                face_down: 'seth_face_down.png',
-                attack_left_1: 'seth_attack_left_1.png',
-                attack_left_2: 'seth_attack_left_2.png'
-            }
-        }
+        PAUSE: 13
     };
 
-    var enemiesList = [
-        {
-            name: "Eyeball Scout",
-            hp: 30,
-            hpMax: 30,
-            mp: 0,
-            mpMax: 0,
-            att: 5,
-            def: 5,
-            exp: 5,
-            sprite: 'eyeball.png'
-        },
-        {
-            name: "Evil Bear",
-            hp: 50,
-            hpMax: 50,
-            mp: 0,
-            mpMax: 0,
-            att: 10,
-            def: 5,
-            exp: 10,
-            sprite: 'bear.png'
-        },
-    ];
-
-    // Not the best name, but currently manages the part of the game
-    // where the player can move around the world.
-    var GameLevel = function(options, tileSize, gridWidth, gridHeight) {
-        this.options = $.extend({
+    var GameDungeon = function(party, datastore, options) {
+        this.options = $.extend(true, {
+            screen: {
+                tileSize: 0,
+                gridWidth: 0,
+                gridHeight: 0,
+                gridMidWidth: 0,
+                gridMidHeight: 0,
+                gridRemWidth: 0,
+                gridRemHeight: 0
+            },
             assets: {
-                map: 'map.json',
-                spritesheet: 'sprites.png',
-                spritemeta: 'sprites.json',
+                dungeon: {
+                    map: '',
+                    spritesheet: '',
+                    spritemeta: ''
+                }
             },
-            tiles: {
-                grass: 'grass.png',
-                water: 'water.png',
-                cliff: 'cliff.png',
-                cliff_b_grass: 'cliff_b_grass.png',
-                cliff_l_grass: 'cliff_l_grass.png',
-                cliff_bl_grass: 'cliff_bl_grass.png',
-                cliff_rl_grass: 'cliff_rl_grass.png',
-                cliff_r_grass: 'cliff_r_grass.png',
-                cliff_rb_grass: 'cliff_rb_grass.png',
-                cliff_t_grass: 'cliff_t_grass.png',
-                cliff_tb_grass: 'cliff_tb_grass.png',
-                cliff_tl_grass: 'cliff_tl_grass.png',
-                cliff_tr_grass: 'cliff_tr_grass.png',
-                cliff_trl_grass: 'cliff_trl_grass.png',
-                cliff_tbl_grass: 'cliff_tbl_grass.png',
-                cliff_trb_grass: 'cliff_trb_grass.png',
-                cliff_trbl_grass: 'cliff_trbl_grass.png',
-                cliff_rbl_grass: 'cliff_rbl_grass.png',
-                grass_l_water: 'grass_l_water.png',
-                grass_r_water: 'grass_r_water.png',
-                grass_t_water: 'grass_t_water.png',
-                grass_b_water: 'grass_b_water.png',
-                grass_tl_water: 'grass_tl_water.png',
-                grass_tb_water: 'grass_tb_water.png',
-                grass_rb_water: 'grass_rb_water.png',
-                water_t_grass: 'water_t_grass.png',
-                cliff_bl_water: 'cliff_bl_water.png',
-                cliff_b_water: 'cliff_b_water.png',
-                cliff_r_water: 'cliff_r_water.png',
-                grass_tb_water: 'grass_tb_water.png',
+            tileList: {},
+            heroList: {},
+            heroFrames: {},
+            enemyList: [],
+            enemyFrames: [],
+            playerData: {
+                leader: '',
+                party: [],
             },
+            levelData: {
+                dungeon: {
+                    start: {x: 0 , y: 0},
+                    walkableTiles: [],
+                    combatProbability: 0.0
+                }
+            }
         }, options);
 
-        this.tileSize = tileSize;
-        this.gridWidth = gridWidth;
-        this.gridHeight = gridHeight;
+        this.party = party;
+
+        this.datastore = datastore;
+
+        this.screen = this.options.screen;
+        this.assets = this.options.assets.dungeon;
+        this.levelData = this.options.levelData.dungeon;
+        this.playerData = this.options.playerData;
+
+        this.heroList = this.options.heroList;
+        this.heroFrames = this.options.heroFrames;
+        this.enemyList = this.options.enemyList;
+        this.enemyFrames = this.options.enemyFrames;
 
         this.map = null;
         this.spritemeta = null;
         this.spritesheet = null;
 
-        this.tileLookup = null;
         this.tileFactory = null;
         this.bgRenderer = null;
         this.spriteRenderer = null;
@@ -163,12 +79,14 @@
     };
 
     // Loads necessary assets.
-    GameLevel.prototype.load = function(onLoad, datastore) {
+    GameDungeon.prototype.load = function(onLoad) {
         var self = this;
-        datastore.load(this.options.assets, function() {
-            for (var key in self.options.assets) {
+        var assets = this.assets;
+        var datastore = this.datastore;
+        datastore.load(assets, function() {
+            for (var key in assets) {
                 if (self[key] === null) {
-                    self[key] = datastore.get(self.options.assets[key]);
+                    self[key] = datastore.get(assets[key]);
                 }
             }
             self.onAssetsLoad();
@@ -177,119 +95,177 @@
     };
 
     // Once external assets are loaded, everything else is initialized.
-    GameLevel.prototype.onAssetsLoad = function() {
-        this.initTiles();
-        this.initSprites();
-        this.initHero();
+    // TODO(richard-to): Clean up reloading dungeon/battles multiple times
+    GameDungeon.prototype.onAssetsLoad = function() {
+        if (this.tileFactory == null) {
+            this.initTiles();
+        }
+        if (this.spriteRenderer == null) {
+            this.initSprites();
+        }
+
+        if (this.heroSprite == null) {
+            this.initHero();
+        }
     };
 
     // Initializes tiles and background renderer.
-    GameLevel.prototype.initTiles = function() {
-        this.tileLookup = [];
-        this.tileFactory = {};
+    GameDungeon.prototype.initTiles = function() {
+        var tileList = this.options.tileList;
+        this.tileFactory = [];
 
-        for (key in this.options.tiles) {
-            this.tileLookup.push(key);
-            this.tileFactory[key] =
-                new rpg.graphics.SpriteTile(
-                    this.spritemeta.frames[this.options.tiles[key]].frame, this.spritesheet);
+        for (var i = 0; i < tileList.length; i++) {
+            this.tileFactory.push(new rpg.graphics.SpriteTile(
+                this.spritemeta.frames[tileList[i]].frame, this.spritesheet));
         }
-
         this.bgRenderer = new rpg.graphics.BgRenderer(
-            this.map, this.tileLookup, this.tileFactory,
-            this.tileSize, this.gridWidth, this.gridHeight);
+            this.map, this.tileFactory, this.options.screen);
     };
 
     // Initializes sprite renderer.
-    GameLevel.prototype.initSprites = function() {
+    GameDungeon.prototype.initSprites = function() {
         this.spriteRenderer = new rpg.graphics.SpriteRenderer(
-            this.map, this.spritesheet,
-            this.tileSize, this.gridWidth, this.gridHeight);
+            this.map, this.spritesheet, this.screen);
     };
 
     // Initializes hero sprite.
-    GameLevel.prototype.initHero = function() {
-        var heroFrames = {};
-        for (var name in heroesList.corrina.frames) {
-            heroFrames[name] = this.spritemeta.frames[heroesList.corrina.frames[name]]
+    GameDungeon.prototype.initHero = function() {
+        var playerData = this.playerData;
+        var levelData = this.levelData;
+        var heroFrames = this.heroFrames[playerData.leader];
+        var frames = {};
+        for (var name in heroFrames) {
+            frames[name] = this.spritemeta.frames[heroFrames[name]]
         }
-        this.heroSprite = new rpg.graphics.SpriteAnim(heroFrames, this.map);
-        this.heroSprite.x = 0;
-        this.heroSprite.y = 1;
+        this.heroSprite = new rpg.graphics.SpriteAnim(frames, this.map);
+        this.heroSprite.x = levelData.start.x;
+        this.heroSprite.y = levelData.start.y;
         this.heroSprite.faceRight();
         this.sprites.unshift(this.heroSprite);
     };
 
     // Handles controls for this aspect of the game.
-    GameLevel.prototype.onKeydown = function(e) {
+    GameDungeon.prototype.onKeydown = function(e) {
         if (e.which == Control.RIGHT) {
-            this.heroSprite.moveRight();
+            this.moveRight();
         } else if (e.which == Control.LEFT) {
-            this.heroSprite.moveLeft();
+            this.moveLeft();
         } else if (e.which == Control.UP) {
-            this.heroSprite.moveUp();
+            this.moveUp();
         } else if (e.which == Control.DOWN) {
-            this.heroSprite.moveDown();
+            this.moveDown();
         } else {
             return;
         }
         e.preventDefault();
     };
-    rpg.GameLevel = GameLevel;
+
+    GameDungeon.prototype.isPath = function(tile) {
+        var walkableTiles = this.levelData.walkableTiles;
+        for (var i = 0; i < walkableTiles.length; i++) {
+            if (tile == walkableTiles[i]) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    GameDungeon.prototype.moveRight = function() {
+        var y = this.heroSprite.y;
+        var x = this.heroSprite.x + 1;
+        if (x < this.map[0].length && this.isPath(this.map[y][x])) {
+            this.heroSprite.moveRight();
+        } else {
+            this.heroSprite.faceRight();
+        }
+    };
+
+    GameDungeon.prototype.moveLeft = function() {
+        var y = this.heroSprite.y;
+        var x = this.heroSprite.x - 1;
+
+        if (x >= 0 && this.isPath(this.map[y][x])) {
+            this.heroSprite.moveLeft();
+        } else {
+            this.heroSprite.faceLeft();
+        }
+    };
+
+    GameDungeon.prototype.moveUp = function() {
+        var y = this.heroSprite.y - 1;
+        var x = this.heroSprite.x;
+        if (y >= 0 && this.isPath(this.map[y][x])){
+            this.heroSprite.moveUp();
+        } else {
+            this.heroSprite.faceUp();
+        }
+    };
+
+    GameDungeon.prototype.moveDown = function() {
+        var y = this.heroSprite.y + 1;
+        var x = this.heroSprite.x;
+        if (y < this.map.length && this.isPath(this.map[y][x])) {
+            this.heroSprite.moveDown();
+        } else {
+            this.heroSprite.faceDown();
+        }
+    };
+    rpg.GameDungeon = GameDungeon;
 
 
     // Loads the combat aspect of the game.
-    var CombatLevel = function(options, tileSize, gridWidth, gridHeight) {
-        this.options = $.extend({
+    var GameArena = function(party, datastore, options) {
+        this.options = $.extend(true, {
+            screen: {
+                tileSize: 0,
+                gridWidth: 0,
+                gridHeight: 0,
+                gridMidWidth: 0,
+                gridMidHeight: 0,
+                gridRemWidth: 0,
+                gridRemHeight: 0
+            },
             assets: {
-                map: 'combatMap.json',
-                spritesheet: 'sprites.png',
-                spritemeta: 'sprites.json',
+                arena: {
+                    map: '',
+                    spritesheet: '',
+                    spritemeta: ''
+                }
             },
-            tiles: {
-                grass: 'grass.png',
-                water: 'water.png',
-                cliff: 'cliff.png',
-                cliff_b_grass: 'cliff_b_grass.png',
-                cliff_l_grass: 'cliff_l_grass.png',
-                cliff_bl_grass: 'cliff_bl_grass.png',
-                cliff_rl_grass: 'cliff_rl_grass.png',
-                cliff_r_grass: 'cliff_r_grass.png',
-                cliff_rb_grass: 'cliff_rb_grass.png',
-                cliff_t_grass: 'cliff_t_grass.png',
-                cliff_tb_grass: 'cliff_tb_grass.png',
-                cliff_tl_grass: 'cliff_tl_grass.png',
-                cliff_tr_grass: 'cliff_tr_grass.png',
-                cliff_trl_grass: 'cliff_trl_grass.png',
-                cliff_tbl_grass: 'cliff_tbl_grass.png',
-                cliff_trb_grass: 'cliff_trb_grass.png',
-                cliff_trbl_grass: 'cliff_trbl_grass.png',
-                cliff_rbl_grass: 'cliff_rbl_grass.png',
-                grass_l_water: 'grass_l_water.png',
-                grass_r_water: 'grass_r_water.png',
-                grass_t_water: 'grass_t_water.png',
-                grass_b_water: 'grass_b_water.png',
-                grass_tl_water: 'grass_tl_water.png',
-                grass_tb_water: 'grass_tb_water.png',
-                grass_rb_water: 'grass_rb_water.png',
-                water_t_grass: 'water_t_grass.png',
-                cliff_rb_water: 'cliff_rb_water.png',
-                cliff_b_water: 'cliff_b_water.png',
-                cliff_r_water: 'cliff_r_water.png',
-                grass_tb_water: 'grass_tb_water.png',
+            tileList: {},
+            heroList: {},
+            heroFrames: {},
+            enemyList: [],
+            enemyFrames: [],
+            playerData: {
+                leader: '',
+                party: [],
             },
-            menuDiv: 'combat-menu-container'
+            levelData: {
+                arena: {
+                    start: {x: 0 , y: 0},
+                    menuDiv: ''
+                }
+            }
         }, options);
 
-        this.tileSize = tileSize;
-        this.gridWidth = gridWidth;
-        this.gridHeight = gridHeight;
+        this.party = party;
+        this.datastore = datastore;
+
+        this.screen = this.options.screen;
+        this.assets = this.options.assets.arena;
+        this.levelData = this.options.levelData.arena;
+        this.playerData = this.options.playerData;
+
+        this.heroList = this.options.heroList;
+        this.heroFrames = this.options.heroFrames;
+        this.enemyList = this.options.enemyList;
+        this.enemyFrames = this.options.enemyFrames;
 
         this.map = null;
         this.spritemeta = null;
         this.spritesheet = null;
 
-        this.tileLookup = null;
         this.tileFactory = null;
         this.bgRenderer = null;
         this.spriteRenderer = null;
@@ -297,85 +273,93 @@
         this.sprites = [];
         this.partySprites = [];
         this.enemySprites = [];
-        this.heroSprite = null;
-        this.party = null;
         this.enemies = null;
     };
 
     // Loads the assets needed to run this aspect of the game.
-    CombatLevel.prototype.load = function(onLoad, datastore, party) {
+    GameArena.prototype.load = function(onLoad) {
+        var assets = this.assets;
+        var datastore = this.datastore;
         var self = this;
-        this.party = party;
-        datastore.load(this.options.assets, function() {
-            for (var key in self.options.assets) {
+        datastore.load(assets, function() {
+            for (var key in assets) {
                 if (self[key] === null) {
-                    self[key] = datastore.get(self.options.assets[key]);
+                    self[key] = datastore.get(assets[key]);
                 }
             }
-            self.onAssetsLoad(party);
+            self.onAssetsLoad();
             onLoad();
         });
     };
 
     // Once external assets are loaded, everything else is initialized.
-    CombatLevel.prototype.onAssetsLoad = function() {
-        this.initTiles();
-        this.initSprites();
+    GameArena.prototype.onAssetsLoad = function() {
+        this.sprites = [];
+        this.partySprites = [];
+        this.enemySprites = [];
+
+        if (this.tileFactory == null) {
+            this.initTiles();
+        }
+
+        if (this.spriteRenderer == null) {
+            this.initSprites();
+        }
+
         this.initHero();
         this.initParty();
         this.initEnemies();
         this.initMenu();
     };
 
-    // Initialize tiless and background renderer.
-    CombatLevel.prototype.initTiles = function() {
-        this.tileLookup = [];
-        this.tileFactory = {};
+    // Initializes tiles and background renderer.
+    GameArena.prototype.initTiles = function() {
+        var tileList = this.options.tileList;
+        this.tileFactory = [];
 
-        for (key in this.options.tiles) {
-            this.tileLookup.push(key);
-            this.tileFactory[key] =
-                new rpg.graphics.SpriteTile(
-                    this.spritemeta.frames[this.options.tiles[key]].frame, this.spritesheet);
+        for (var i = 0; i < tileList.length; i++) {
+            this.tileFactory.push(new rpg.graphics.SpriteTile(
+                this.spritemeta.frames[tileList[i]].frame, this.spritesheet));
         }
 
         this.bgRenderer = new rpg.graphics.BgRenderer(
-            this.map, this.tileLookup, this.tileFactory,
-            this.tileSize, this.gridWidth, this.gridHeight);
+            this.map, this.tileFactory, this.screen);
     };
 
     // Initializes sprite renderer.
-    CombatLevel.prototype.initSprites = function() {
+    GameArena.prototype.initSprites = function() {
         this.spriteRenderer = new rpg.graphics.SpriteRenderer(
-            this.map, this.spritesheet,
-            this.tileSize, this.gridWidth, this.gridHeight);
+            this.map, this.spritesheet, this.screen);
     };
 
     // Initializes hero sprite.
-    CombatLevel.prototype.initHero = function() {
-        var heroFrames = {};
-        for (var name in heroesList.corrina.frames) {
-            heroFrames[name] = this.spritemeta.frames[heroesList.corrina.frames[name]]
+    GameArena.prototype.initHero = function() {
+        var playerData = this.playerData;
+        var levelData = this.levelData;
+        var heroFrames = this.heroFrames[playerData.leader];
+        var frames = {};
+        for (var name in heroFrames) {
+            frames[name] = this.spritemeta.frames[heroFrames[name]];
         }
-        this.heroSprite = new rpg.graphics.SpriteAnim(heroFrames, this.map);
+        this.heroSprite = new rpg.graphics.SpriteAnim(frames);
         this.heroSprite.x = 8;
         this.heroSprite.y = 2;
         this.heroSprite.faceLeft();
-        this.partySprites.unshift(this.heroSprite);
         this.sprites.unshift(this.heroSprite);
+        this.partySprites.unshift(this.heroSprite);
     };
 
     // Initializes party members.
-    // TODO(richard-to): Add party members dynamically.
-    CombatLevel.prototype.initParty = function() {
-        var heroFrames = {};
-        for (var name in heroesList.seth.frames) {
-            heroFrames[name] = this.spritemeta.frames[heroesList.seth.frames[name]]
-        }
-        for (var i = 1; i < this.party.length; i++) {
-            var partyMember = new rpg.graphics.SpriteAnim(heroFrames, this.map);
+    GameArena.prototype.initParty = function() {
+        var party = this.playerData.party;
+        for (var i = 0; i < party.length; i++) {
+            var frames = {};
+            for (var name in this.heroFrames[party[i]]) {
+                frames[name] = this.spritemeta.frames[this.heroFrames[party[i]][name]];
+            }
+            var partyMember = new rpg.graphics.SpriteAnim(frames, this.map);
             partyMember.x = 8;
-            partyMember.y = 2 + i * 2;
+            partyMember.y = 2 + (i + 1) * 2;
             partyMember.faceLeft();
             this.partySprites.push(partyMember);
             this.sprites.unshift(partyMember);
@@ -383,8 +367,7 @@
     };
 
     // Initializes enemies.
-    // TODO(richard-to): Randomly generate enemies.
-    CombatLevel.prototype.initEnemies = function() {
+    GameArena.prototype.initEnemies = function() {
         var maxEnemies = 2;
         var numEnemies = Math.floor((Math.random() * maxEnemies) + 1);
         var enemies = [];
@@ -392,11 +375,10 @@
         var x = 1;
         var y = 2;
         for (var i = 0; i < numEnemies; i++) {
-            var enemyType = (Math.floor((Math.random() * enemiesList.length)));
-            var enemyConfig = enemiesList[enemyType];
-            enemies.push(new rpg.entity.Enemy(enemyConfig));
-            var enemySprite = new rpg.graphics.SpriteEnemy(
-                this.spritemeta.frames[enemyConfig.sprite], this.map, true)
+            var enemyType = (Math.floor((Math.random() * this.enemyList.length)));
+            var enemyFrame = this.enemyFrames[enemyType];
+            enemies.push(new this.enemyList[enemyType]());
+            var enemySprite = new rpg.graphics.SpriteEnemy(this.spritemeta.frames[enemyFrame]);
             enemySprite.x = x;
             enemySprite.y = y;
             enemySprite.faceRight();
@@ -410,22 +392,29 @@
     };
 
     // Initializes combat menu.
-    // TODO(richard-to): Dynamically load party and enemy entities.
-    CombatLevel.prototype.initMenu = function() {
+    GameArena.prototype.initMenu = function() {
+        var handleBattleFinished = this.handleBattleFinished.bind(this);
         var CombatApp = rpg.combat.App;
         React.renderComponent(
             <CombatApp
+                onBattleFinished={handleBattleFinished}
                 party={this.party}
                 enemies={this.enemies}
                 partySprites={this.partySprites}
                 enemySprites={this.enemySprites} />,
-            document.getElementById(this.options.menuDiv)
+            document.getElementById(this.levelData.menuDiv)
         );
     };
 
+    GameArena.prototype.handleBattleFinished = function() {
+        // TODO(richard-to): Should unmount be called here or inside component?
+        React.unmountComponentAtNode(document.getElementById(this.levelData.menuDiv));
+        this.onBattleFinished();
+    };
+
     // Currently no key commands. Need to figure out how to interact with React components.
-    CombatLevel.prototype.onKeydown = function(e) {};
-    rpg.CombatLevel = CombatLevel;
+    GameArena.prototype.onKeydown = function(e) {};
+    rpg.GameArena = GameArena;
 
 
     // Animation loop. Draws sprites and backgrounds in a continous loop.
@@ -472,88 +461,160 @@
     rpg.AnimLoop = AnimLoop;
 
 
-    // Game Engine is the main controller for swapping out levels, managing
-    // animation, delegate key events. Need to make this thinner.
-    var GameEngine = function(el, options) {
-        this.options = $.extend({
-            tileSize: 64,
-            gridWidth: 10,
-            gridHeight: 7
+    var GameLevel = function(canvas, ctx, datastore, party, options) {
+        this.options = $.extend(true, {
+            screen: {
+                tileSize: 0,
+                gridWidth: 0,
+                gridHeight: 0,
+                gridMidWidth: 0,
+                gridMidHeight: 0,
+                gridRemWidth: 0,
+                gridRemHeight: 0
+            },
+            assets: {
+                dungeon: {
+                    map: '',
+                    spritesheet: '',
+                    spritemeta: ''
+                },
+                arena: {
+                    map: '',
+                    spritesheet: '',
+                    spritemeta: ''
+                }
+            },
+            tileList: {},
+            heroList: {},
+            heroFrames: {},
+            enemyList: [],
+            enemyFrames: [],
+            playerData: {
+                leader: '',
+                party: [],
+            },
+            levelData: {
+                dungeon: {
+                    start: {x: 0 , y: 0},
+                    walkableTiles: [],
+                    combatProbability: 0.0
+                },
+                arena: {
+                    start: {x: 0 , y: 0},
+                    menuDiv: ''
+                }
+            }
         }, options);
-        this.datastore = new rpg.util.Datastore();
-
-        this.party = [
-            new rpg.entity.Player(heroesList.corrina),
-            new rpg.entity.Player(heroesList.seth),
-        ];
-
-        this.levelConfig = {
-            exploration: new GameLevel(null, this.options.tileSize, this.options.gridWidth, this.options.gridHeight),
-            combat: new CombatLevel(null, this.options.tileSize, this.options.gridWidth, this.options.gridHeight),
-            combatProbability: 0.1
-        };
-
-        this.level = null;
-        this.el = el;
-        this.$el = $(el);
-        this.canvas = document.createElement('canvas');
-        this.canvas.width = this.options.tileSize * this.options.gridWidth;
-        this.canvas.height = this.options.tileSize * this.options.gridHeight;
-        this.ctx = this.canvas.getContext('2d');
-        this.el.appendChild(this.canvas);
+        this.ctx = ctx;
+        this.canvas = canvas;
+        this.datastore = datastore;
+        this.party = party;
+        this.dungeon = new GameDungeon(this.party, this.datastore, this.options);
+        this.arena = new GameArena(this.party, this.datastore, this.options);
     };
 
-    // Starts the game in exploration mode.
-    GameEngine.prototype.run = function() {
+    GameLevel.prototype.run = function() {
         this.loadExploration();
     };
 
     // Loads exploration mode.
-    GameEngine.prototype.loadExploration = function() {
+    GameLevel.prototype.loadExploration = function() {
         var self = this;
         this.pauseKeyListener();
-        this.level = this.levelConfig.exploration;
-        this.level.load(function() {
-            self.animLoop = new AnimLoop(self.ctx, self.canvas, self.level);
+        if (this.animLoop) {
+            this.animLoop.animStopped = true;
+        }
+        this.dungeon.load(function() {
+            self.animLoop = new AnimLoop(self.ctx, self.canvas, self.dungeon);
             self.animLoop.animate();
             self.initExplorationControls();
-        }, this.datastore);
+        });
     };
 
     // Loads combat mode.
-    GameEngine.prototype.loadCombat = function() {
+    GameLevel.prototype.loadCombat = function() {
         var self = this;
         this.pauseKeyListener();
-        this.level = this.levelConfig.combat;
-        this.level.load(function() {
-            self.animLoop = new AnimLoop(self.ctx, self.canvas, self.level);
+        if (this.animLoop) {
+            this.animLoop.animStopped = true;
+        }
+        this.arena.load(function() {
+            self.animLoop = new AnimLoop(self.ctx, self.canvas, self.arena);
             self.animLoop.animate();
-        }, this.datastore, this.party);
+            self.arena.onBattleFinished = function() {
+                self.loadExploration();
+            }
+        });
     };
 
     // Pauses global key listener.
-    GameEngine.prototype.pauseKeyListener = function() {
+    GameLevel.prototype.pauseKeyListener = function() {
         $(document.body).off('keydown');
     };
 
     // Key listener that delegates events to level objects.
     // Also currently handles combat mode transition. Should
     // probably be moved out here?
-    GameEngine.prototype.initExplorationControls = function() {
+    GameLevel.prototype.initExplorationControls = function() {
         var self = this;
-        var level = self.level;
+        var dungeon = this.dungeon;
+        var combatProbability = this.dungeon.levelData.combatProbability;
         $(document.body).on('keydown', function(e) {
             if (self.animLoop.keyWait) {
                 return;
             }
-
-            if (Math.random() < self.levelConfig.combatProbability) {
+            // TODO(richard-to): Belongs here?
+            if (Math.random() < combatProbability) {
                 self.loadCombat();
             } else {
-                level.onKeydown(e);
+                dungeon.onKeydown(e);
             }
             self.animLoop.keyWait = true;
         });
     };
+    rpg.GameLevel = GameLevel;
+
+    // Game Engine is the main controller for swapping out levels, managing
+    // animation, delegate key events. Need to make this thinner.
+    var GameEngine = function(el, options) {
+        this.options = options;
+
+        this.screen = this.options.screen;
+        this.datastore = new util.Datastore();
+        this.el = el;
+        this.$el = $(el);
+        this.canvas = document.createElement('canvas');
+        this.canvas.width = this.screen.tileSize * this.screen.gridWidth;
+        this.canvas.height = this.screen.tileSize * this.screen.gridHeight;
+
+        // TODO(richard-to): Move this to util?
+        this.screen.gridMidWidth = Math.floor(this.screen.gridWidth / 2);
+        if (this.gridWidth % 2 == 0) {
+            this.screen.gridMidWidth -= 1;
+        }
+        this.screen.gridRemWidth = this.screen.gridWidth - this.screen.gridMidWidth;
+        this.screen.gridMidHeight = Math.floor(this.screen.gridHeight / 2);
+        if (this.screen.gridHeight % 2 == 0) {
+            this.screen.gridMidHeight -= 1;
+        }
+        this.screen.gridRemHeight = this.screen.gridHeight - this.screen.gridMidHeight;
+
+        this.ctx = this.canvas.getContext('2d');
+        this.el.appendChild(this.canvas);
+
+        this.party = [];
+        for (key in this.options.heroList) {
+            this.party.push(new this.options.heroList[key]());
+        }
+
+        // TODO(richard-to): Not a huge fan of passing the party array everywhere...
+        this.level = new GameLevel(this.canvas, this.ctx, this.datastore, this.party, this.options);
+    };
+
+    // Starts the game in exploration mode.
+    GameEngine.prototype.run = function() {
+        this.level.run();
+    };
     rpg.GameEngine = GameEngine;
+
 })(window);

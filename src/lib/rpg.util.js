@@ -23,6 +23,7 @@
     };
     util.dataLoaders = dataLoaders;
 
+
     // Simple datastore/cache that loads images and JSON files synchronously.
     var Datastore = function(dataLoaders) {
         this.dataLoaders = dataLoaders || util.dataLoaders;
@@ -39,14 +40,17 @@
             }
         }
 
+        var allAssetsLoaded = true;
         for (var key in assets) {
             var type = assets[key].substring(assets[key].lastIndexOf('.') + 1);
             if (this.data[assets[key]] === null && dataLoaders[type]) {
+                allAssetsLoaded = false;
                 dataLoaders[type](this.data, assets[key], function() {
                     self.onload(callback);
                 });
             }
         }
+        self.onload(callback);
     };
 
     Datastore.prototype.onload = function(callback) {

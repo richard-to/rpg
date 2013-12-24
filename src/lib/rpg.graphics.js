@@ -49,20 +49,21 @@
             lineWidth: 3,
             alphaNormal: 0.7,
             alphaFlash: 0.8,
-            radius: 12
+            radius: 13
         }, options);
+
         this.currentAlpha = this.options.alphaNormal;
         this.frameCount = 0;
         this.circlePi = 2 * Math.PI;
+
+        this.enabled = false;
     };
 
     SpriteHighlightEffect.prototype.draw = function(ctx, x, y, tileSize, scale) {
         var radius = this.options.radius * scale;
         var alpha = this.currentAlpha;
-
         ctx.beginPath();
         ctx.globalAlpha = alpha;
-
         ctx.arc(
             x * tileSize + tileSize / 2,
             y * tileSize + tileSize - radius,
@@ -92,18 +93,29 @@
         this.options = $.extend({
             frameDuration: 30,
             fillColor: '#fff',
+            fillStyle: '#000',
             font: '12pt monospace',
-            textAlign: 'center'
+            textAlign: 'center',
+            missText: 'miss',
         }, options);
         this.frameCount = 0;
-        this.damage = 99;
-        this.disabled = true;
+        this.damage = 0;
+        this.enabled = false;
         this.circlePi = 2 * Math.PI;
+    };
+
+    SpriteDamageEffect.prototype.showDamage = function(damage) {
+        if (damage == 0) {
+            this.damage = this.options.missText;
+        } else {
+            this.damage = damage;
+        }
+        this.enabled = true;
     };
 
     SpriteDamageEffect.prototype.draw = function(ctx, x, y, tileSize, scale) {
         ctx.font = this.options.font;
-        ctx.fillStyle = '#000';
+        ctx.fillStyle = this.options.fillStyle;
         ctx.textAlign = this.options.textAlign;
         ctx.fillText(
             this.damage.toString(),
@@ -117,9 +129,8 @@
             x * tileSize + tileSize / 2 - 1.5,
             y * tileSize + tileSize - 1);
 
-
         if (this.frameCount > this.options.frameDuration) {
-            this.disabled = true;
+            this.enabled = false;
             this.frameCount = 0;
         } else {
             this.frameCount++;
@@ -134,7 +145,7 @@
     // For example, a character sprite would have frames
     // for animating the character walking in various directions.
     //
-    var SpriteEnemy = function(frame, map, enemy) {
+    var SpriteEnemy = function(frame, map) {
         this.frames = [];
         this.frames.push(frame);
 
@@ -150,16 +161,13 @@
 
         this.faceRight();
 
-        this.highight = false;
-        if (enemy) {
-            this.highightSprite = new SpriteHighlightEffect({
-                fillColor: '#c9545e',
-                strokeColor: '#f27979'
-            });
-        } else {
-            this.highightSprite = new SpriteHighlightEffect();
-        }
+        this.highightSprite = new SpriteHighlightEffect({
+            fillColor: '#c9545e',
+            strokeColor: '#f27979'
+        });
+
         this.damageSprite = new SpriteDamageEffect();
+        this.animMixins = [this.highightSprite, this.damageSprite];
     };
 
 
@@ -212,46 +220,52 @@
         }
     };
 
+    SpriteEnemy.prototype.showDamage = function(damage) {
+        this.damageSprite.showDamage(damage);
+    };
+
     SpriteEnemy.prototype.showHighlight = function() {
-        this.highight = true;
+        this.highightSprite.enabled = true;
     };
 
     SpriteEnemy.prototype.hideHighlight = function() {
-        this.highight = false;
+        this.highightSprite.enabled = false;
     };
 
-    // Draws character moving left.
-    SpriteEnemy.prototype.moveRight = function() {
+    // Draws a character fainting.
+    SpriteEnemy.prototype.faint = function() {
         var frames = this.frames;
         var y = this.y;
-        var x = this.x + 1;
-        if (x >= 0 && this.map[y][x] >= 0) {
-            this.x = x;
-            this.frameQueue.unshift([frames[0], x - 0.9, y, this.frameDuration]);
-            this.frameQueue.unshift([frames[0], x - 0.8, y, this.frameDuration]);
-            this.frameQueue.unshift([frames[0], x - 0.7, y, this.frameDuration]);
-            this.frameQueue.unshift([frames[0], x - 0.6, y, this.frameDuration]);
-            this.frameQueue.unshift([frames[0], x - 0.5, y, this.frameDuration]);
-            this.frameQueue.unshift([frames[0], x - 0.4, y, this.frameDuration]);
-            this.frameQueue.unshift([frames[0], x - 0.3, y, this.frameDuration]);
-            this.frameQueue.unshift([frames[0], x - 0.2, y, this.frameDuration]);
-            this.frameQueue.unshift([frames[0], x - 0.1, y, this.frameDuration]);
-            this.frameQueue.unshift([frames[0], x, y, 0]);
-        } else {
-            this.faceLeft();
-        }
+        var x = this.x;
+        this.frameQueue.unshift([frames[0], x, y, this.frameDuration, {alpha: 0.9}]);
+        this.frameQueue.unshift([frames[0], x, y, this.frameDuration, {alpha: 0.8}]);
+        this.frameQueue.unshift([frames[0], x, y, this.frameDuration, {alpha: 0.7}]);
+        this.frameQueue.unshift([frames[0], x, y, this.frameDuration, {alpha: 0.6}]);
+        this.frameQueue.unshift([frames[0], x, y, this.frameDuration, {alpha: 0.5}]);
+        this.frameQueue.unshift([frames[0], x, y, this.frameDuration, {alpha: 0.4}]);
+        this.frameQueue.unshift([frames[0], x, y, this.frameDuration, {alpha: 0.3}]);
+        this.frameQueue.unshift([frames[0], x, y, this.frameDuration, {alpha: 0.2}]);
+        this.frameQueue.unshift([frames[0], x, y, this.frameDuration, {alpha: 0.1}]);
+        this.frameQueue.unshift([frames[0], x, y, this.frameDuration, {alpha: 0.0}]);
     };
 
     // Draws attack animation.
     //
-    // Not sure if all the animations belong here.
-    //
     SpriteEnemy.prototype.attackRight = function(callback) {
         this.callback = callback;
-        this.moveRight();
         var frames = this.frames;
-        var x = this.x - 1;
+        var x = this.x;
         var y = this.y;
+        this.frameQueue.unshift([frames[0], x + 0.1, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.2, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.3, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.4, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.5, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.6, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.7, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.8, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 0.9, y, this.frameDuration]);
+        this.frameQueue.unshift([frames[0], x + 1.0, y, 0]);
         this.frameQueue.unshift([frames[0], x + 0.9, y, this.frameDuration]);
         this.frameQueue.unshift([frames[0], x + 0.8, y, this.frameDuration]);
         this.frameQueue.unshift([frames[0], x + 0.7, y, this.frameDuration]);
@@ -262,7 +276,6 @@
         this.frameQueue.unshift([frames[0], x + 0.2, y, this.frameDuration]);
         this.frameQueue.unshift([frames[0], x + 0.1, y, this.frameDuration]);
         this.frameQueue.unshift([frames[0], x, y, 0]);
-        this.x = x;
     };
 
     // Draws the sprite facing right. The map is used to check if the
@@ -280,9 +293,8 @@
     // For example, a character sprite would have frames
     // for animating the character walking in various directions.
     //
-    var SpriteAnim = function(frames, map, enemy) {
+    var SpriteAnim = function(frames) {
         this.frames = frames;
-        this.map = map;
         this.scale = 2;
         this.frameDuration = 1;
         this.x = 0;
@@ -290,16 +302,9 @@
         this.frameQueue = [];
         this.lastFrame = null;
 
-        this.highight = false;
-        if (enemy) {
-            this.highightSprite = new SpriteHighlightEffect({
-                fillColor: '#c9545e',
-                strokeColor: '#f27979'
-            });
-        } else {
-            this.highightSprite = new SpriteHighlightEffect();
-        }
+        this.highightSprite = new SpriteHighlightEffect();
         this.damageSprite = new SpriteDamageEffect();
+        this.animMixins = [this.highightSprite, this.damageSprite];
     };
 
     // Queue up a frame that will be animated by SpriteRenderer.
@@ -357,26 +362,39 @@
         this.frameQueue.unshift([this.frames.face_right, this.x, this.y, 0]);
     };
 
+    // Draws a character fainting.
+    SpriteAnim.prototype.faint = function() {
+        var frames = this.frames;
+        var y = this.y;
+        var x = this.x;
+        this.frameQueue.unshift([frames.face_left, x, y, this.frameDuration, {alpha: 0.9}]);
+        this.frameQueue.unshift([frames.face_left, x, y, this.frameDuration, {alpha: 0.8}]);
+        this.frameQueue.unshift([frames.face_left, x, y, this.frameDuration, {alpha: 0.7}]);
+        this.frameQueue.unshift([frames.face_left, x, y, this.frameDuration, {alpha: 0.6}]);
+        this.frameQueue.unshift([frames.face_left, x, y, this.frameDuration, {alpha: 0.5}]);
+        this.frameQueue.unshift([frames.face_left, x, y, this.frameDuration, {alpha: 0.4}]);
+        this.frameQueue.unshift([frames.face_left, x, y, this.frameDuration, {alpha: 0.3}]);
+        this.frameQueue.unshift([frames.face_left, x, y, this.frameDuration, {alpha: 0.2}]);
+        this.frameQueue.unshift([frames.face_left, x, y, this.frameDuration, {alpha: 0.1}]);
+        this.frameQueue.unshift([frames.face_left, x, y, this.frameDuration, {alpha: 0.0}]);
+    };
+
     // Draws character moving right.
     SpriteAnim.prototype.moveRight = function() {
         var frames = this.frames;
         var y = this.y;
-        var x = this.x + 1;
-        if (x < this.map[0].length && this.map[y][x] >= 0) {
-            this.x = x;
-            this.frameQueue.unshift([frames.walk_right_1, x - 0.9, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_right_1, x - 0.8, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_right_1, x - 0.7, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_right, x - 0.6, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_right, x - 0.5, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_right, x - 0.4, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_right_2, x - 0.3, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_right_2, x - 0.2, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_right_2, x - 0.1, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_right, x, y, 0]);
-        } else {
-            this.faceRight();
-        }
+        var x = this.x;
+        this.x = x + 1;
+        this.frameQueue.unshift([frames.walk_right_1, x + 0.1, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_right_1, x + 0.2, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_right_1, x + 0.3, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_right, x + 0.4, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_right, x + 0.5, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_right, x + 0.6, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_right_2, x + 0.7, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_right_2, x + 0.8, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_right_2, x + 0.9, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_right, this.x, y, 0]);
     };
 
     // Draws character facing left.
@@ -388,22 +406,18 @@
     SpriteAnim.prototype.moveLeft = function() {
         var frames = this.frames;
         var y = this.y;
-        var x = this.x - 1;
-        if (x >= 0 && this.map[y][x] >= 0) {
-            this.x = x;
-            this.frameQueue.unshift([frames.walk_left_1, x + 0.9, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_left_1, x + 0.8, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_left_1, x + 0.7, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_left, x + 0.6, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_left, x + 0.5, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_left, x + 0.4, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_left_2, x + 0.3, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_left_2, x + 0.2, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_left_2, x + 0.1, y, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_left, x, y, 0]);
-        } else {
-            this.faceLeft();
-        }
+        var x = this.x;
+        this.x = x - 1;
+        this.frameQueue.unshift([frames.walk_left_1, x - 0.1, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_1, x - 0.2, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_1, x - 0.3, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x - 0.4, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x - 0.5, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x - 0.6, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_2, x - 0.7, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_2, x - 0.8, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_2, x - 0.9, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, this.x, y, 0]);
     };
 
     // Draws character facing up.
@@ -415,22 +429,18 @@
     SpriteAnim.prototype.moveUp = function() {
         var frames = this.frames;
         var x = this.x;
-        var y = this.y - 1;
-        if (y >= 0 && this.map[y][x] >= 0) {
-            this.y = y;
-            this.frameQueue.unshift([frames.walk_up_1, x, y + 0.9, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_up_1, x, y + 0.8, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_up_1, x, y + 0.7, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_up, x, y + 0.6, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_up, x, y + 0.5, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_up, x, y + 0.4, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_up_2, x, y + 0.3, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_up_2, x, y + 0.2, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_up_2, x, y + 0.1, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_up, x, y, 0]);
-        } else {
-            this.faceUp();
-        }
+        var y = this.y;
+        this.y = y - 1;
+        this.frameQueue.unshift([frames.walk_up_1, x, y - 0.1, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_up_1, x, y - 0.2, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_up_1, x, y - 0.3, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_up, x, y - 0.4, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_up, x, y - 0.5, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_up, x, y - 0.6, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_up_2, x, y - 0.7, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_up_2, x, y - 0.8, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_up_2, x, y - 0.9, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_up, x, this.y, 0]);
     };
 
     // Draws character facing down.
@@ -442,22 +452,18 @@
     SpriteAnim.prototype.moveDown = function() {
         var frames = this.frames;
         var x = this.x;
-        var y = this.y + 1;
-        if (y < this.map.length && this.map[y][x] >= 0) {
-            this.y = y;
-            this.frameQueue.unshift([frames.walk_down_1, x, y - 0.9, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_down_1, x, y - 0.8, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_down_1, x, y - 0.7, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_down, x, y - 0.6, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_down, x, y - 0.5, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_down, x, y - 0.4, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_down_2, x, y - 0.3, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_down_2, x, y - 0.2, this.frameDuration]);
-            this.frameQueue.unshift([frames.walk_down_2, x, y - 0.1, this.frameDuration]);
-            this.frameQueue.unshift([frames.face_down, x, y, 0]);
-        } else {
-            this.faceDown();
-        }
+        var y = this.y;
+        this.y = y + 1;
+        this.frameQueue.unshift([frames.walk_down_1, x, y + 0.1, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_down_1, x, y + 0.2, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_down_1, x, y + 0.3, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_down, x, y + 0.4, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_down, x, y + 0.5, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_down, x, y + 0.6, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_down_2, x, y + 0.7, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_down_2, x, y + 0.8, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_down_2, x, y + 0.9, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_down, x, this.y, 0]);
     };
 
     // Draws attack animation.
@@ -466,13 +472,22 @@
     //
     SpriteAnim.prototype.attackLeft = function(callback) {
         this.callback = callback;
-        this.moveLeft();
         var frames = this.frames;
-        this.frameQueue.unshift([frames.attack_left_1, this.x, this.y, 10]);
-        this.frameQueue.unshift([frames.attack_left_2, this.x-1, this.y, 15]);
-        this.frameQueue.unshift([frames.face_left, this.x, this.y, 0]);
-        var x = this.x + 1;
+        var x = this.x;
         var y = this.y;
+        this.frameQueue.unshift([frames.walk_left_1, x - 0.1, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_1, x - 0.2, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_1, x - 0.3, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x - 0.4, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x - 0.5, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x - 0.6, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_2, x - 0.7, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_2, x - 0.8, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.walk_left_2, x - 0.9, y, this.frameDuration]);
+        this.frameQueue.unshift([frames.face_left, x - 1.0, y, 0]);
+        this.frameQueue.unshift([frames.attack_left_1, x - 1.0, this.y, 10]);
+        this.frameQueue.unshift([frames.attack_left_2, x - 2.0, this.y, 10]);
+        this.frameQueue.unshift([frames.face_left, x - 1.0, this.y, 0]);
         this.frameQueue.unshift([frames.walk_left_1, x - 0.9, y, this.frameDuration]);
         this.frameQueue.unshift([frames.walk_left_1, x - 0.8, y, this.frameDuration]);
         this.frameQueue.unshift([frames.walk_left_1, x - 0.7, y, this.frameDuration]);
@@ -483,41 +498,18 @@
         this.frameQueue.unshift([frames.walk_left_2, x - 0.2, y, this.frameDuration]);
         this.frameQueue.unshift([frames.walk_left_2, x - 0.1, y, this.frameDuration]);
         this.frameQueue.unshift([frames.face_left, x, y, 0]);
-        this.x = x;
     };
 
-    // Draws attack animation.
-    //
-    // Not sure if all the animations belong here.
-    //
-    SpriteAnim.prototype.attackRight = function(callback) {
-        this.callback = callback;
-        this.moveRight();
-        var frames = this.frames;
-        this.frameQueue.unshift([frames.attack_1, this.x, this.y, 10]);
-        this.frameQueue.unshift([frames.attack_2, this.x+0.5, this.y, 15]);
-        this.frameQueue.unshift([frames.face_right, this.x, this.y, 0]);
-        var x = this.x - 1;
-        var y = this.y;
-        this.frameQueue.unshift([frames.walk_right_1, x + 0.9, y, this.frameDuration]);
-        this.frameQueue.unshift([frames.walk_right_1, x + 0.8, y, this.frameDuration]);
-        this.frameQueue.unshift([frames.walk_right_1, x + 0.7, y, this.frameDuration]);
-        this.frameQueue.unshift([frames.face_right, x + 0.6, y, this.frameDuration]);
-        this.frameQueue.unshift([frames.face_right, x + 0.5, y, this.frameDuration]);
-        this.frameQueue.unshift([frames.face_right, x + 0.4, y, this.frameDuration]);
-        this.frameQueue.unshift([frames.walk_right_2, x + 0.3, y, this.frameDuration]);
-        this.frameQueue.unshift([frames.walk_right_2, x + 0.2, y, this.frameDuration]);
-        this.frameQueue.unshift([frames.walk_right_2, x + 0.1, y, this.frameDuration]);
-        this.frameQueue.unshift([frames.face_right, x, y, 0]);
-        this.x = x;
+    SpriteAnim.prototype.showDamage = function(damage) {
+        this.damageSprite.showDamage(damage);
     };
 
     SpriteAnim.prototype.showHighlight = function() {
-        this.highight = true;
+        this.highightSprite.enabled = true;
     };
 
     SpriteAnim.prototype.hideHighlight = function() {
-        this.highight = false;
+        this.highightSprite.enabled = false;
     };
 
     graphics.SpriteAnim = SpriteAnim;
@@ -526,28 +518,20 @@
     // Renders background tiles on canvas.
     //
     // - map: 2d array of tiles. Each digit references a specific tile in TileFactory
-    // - tileFactory: An array with tile objects (ColorTile or SpriteTile)
     // - tileSize: Size of tile. 64 would represent a 64x64 tile
     // - gridWidth: Grid width
     // - gridHeight: Grid height
     //
-    var BgRenderer = function(map, tileLookup, tileFactory, tileSize, gridWidth, gridHeight) {
+    var BgRenderer = function(map, tileFactory, screen) {
         this.map = map;
-        this.tileSize = tileSize;
-        this.tileLookup = tileLookup;
         this.tileFactory = tileFactory;
-        this.gridWidth = gridWidth;
-        this.gridHeight = gridHeight;
-        this.gridMidWidth = Math.floor(this.gridWidth / 2);
-        if (this.gridWidth % 2 == 0) {
-            this.gridMidWidth -= 1;
-        }
-        this.gridRemWidth = this.gridWidth - this.gridMidWidth;
-        this.gridMidHeight = Math.floor(this.gridHeight / 2);
-        if (this.gridHeight % 2 == 0) {
-            this.gridMidHeight -= 1;
-        }
-        this.gridRemHeight = this.gridHeight - this.gridMidHeight;
+        this.tileSize = screen.tileSize;
+        this.gridWidth = screen.gridWidth;
+        this.gridHeight = screen.gridHeight;
+        this.gridMidWidth = screen.gridMidWidth;
+        this.gridRemWidth = screen.gridRemWidth;
+        this.gridMidHeight = screen.gridMidHeight;
+        this.gridRemHeight = screen.gridRemHeight;
     };
 
     // Draws background on canvas.
@@ -564,7 +548,6 @@
         var ry = null;
         var rx = null;
 
-        var tileLookup = this.tileLookup;
         var tileFactory = this.tileFactory;
         var tileSize = this.tileSize;
         var map = this.map;
@@ -619,8 +602,7 @@
                 ry = (y - sy) * tileSize;
                 rx = (x - sx) * tileSize;
                 tileId = map[y][x];
-                tileType = tileLookup[tileId];
-                tileRenderer = tileFactory[tileType];
+                tileRenderer = tileFactory[tileId];
                 if (tileRenderer) {
                     tileRenderer.draw(ctx, rx - px, ry - py, tileSize)
                 }
@@ -638,22 +620,16 @@
     // gridWidth: See BgRenderer
     // gridHeight: See BgRenderer
     //
-    var SpriteRenderer = function(map, spriteSheet, tileSize, gridWidth, gridHeight) {
+    var SpriteRenderer = function(map, spriteSheet, screen) {
         this.map = map;
         this.spriteSheet = spriteSheet;
-        this.tileSize = tileSize;
-        this.gridWidth = gridWidth;
-        this.gridHeight = gridHeight;
-        this.gridMidWidth = Math.floor(this.gridWidth / 2);
-        if (this.gridWidth % 2 == 0) {
-            this.gridMidWidth -= 1;
-        }
-        this.gridRemWidth = this.gridWidth - this.gridMidWidth;
-        this.gridMidHeight = Math.floor(this.gridHeight / 2);
-        if (this.gridHeight % 2 == 0) {
-            this.gridMidHeight -= 1;
-        }
-        this.gridRemHeight = this.gridHeight - this.gridMidHeight;
+        this.tileSize = screen.tileSize;
+        this.gridWidth = screen.gridWidth;
+        this.gridHeight = screen.gridHeight;
+        this.gridMidWidth = screen.gridMidWidth;
+        this.gridRemWidth = screen.gridRemWidth;
+        this.gridMidHeight = screen.gridMidHeight;
+        this.gridRemHeight = screen.gridRemHeight;
     };
 
     // Draws sprite.
@@ -685,6 +661,7 @@
         var frame = data[0].frame;
         var x = data[1];
         var y = data[2];
+        var spriteParams = (data[4]) ? data[4] : {};
 
         var cx = x;
         var cy = y;
@@ -707,20 +684,20 @@
         ry = (y - sy) * tileSize;
         rx = (x - sx) * tileSize;
 
-        if (sprite.highight) {
-            sprite.highightSprite.draw(ctx, (x - sx), (y - sy), tileSize, scale);
+        for (var i = 0; i < sprite.animMixins.length; i++) {
+            if (sprite.animMixins[i].enabled) {
+                sprite.animMixins[i].draw(ctx, (x - sx), (y - sy), tileSize, scale);
+            }
         }
 
-        if (sprite.damageSprite.disabled === false) {
-            sprite.damageSprite.draw(ctx, (x - sx), (y - sy), tileSize, scale);
-        }
-
+        ctx.globalAlpha = (spriteParams.alpha !== undefined) ? spriteParams.alpha : 1.0;
         ctx.drawImage(spriteSheet,
             frame.x, frame.y, frame.w, frame.h,
             (frame.w * scale - tileSize) / 2 + (x - sx) * tileSize,
             (frame.h * scale) / -2 + tileSize * (y - sy),
             frame.w * scale, frame.h * scale);
         ctx.imageSmoothingEnabled = true;
+        ctx.globalAlpha = 1.0;
     };
     graphics.SpriteRenderer = SpriteRenderer;
 
