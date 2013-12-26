@@ -103,8 +103,8 @@ body {
     width: 50%;
 }
 
-.enemy-wrap .entity-status tr:hover,
-.action-status tr:hover {
+.enemy-wrap .entity-status tr.selected,
+.action-status tr.selected {
     background: rgba(30, 30, 30, .75);
     color: #ffe500;
     cursor: pointer;

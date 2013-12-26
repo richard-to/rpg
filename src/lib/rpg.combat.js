@@ -3,34 +3,85 @@
 
     var combat = {};
 
+    // TODO(richard-to): Need to make sure util loaded. Time to use RequireJS?
+    var util = rpg.util;
+    var Control = util.Control;
+
 
     var EnemyMenu = React.createClass({
-        handleClick: function(entity, event) {
-            this.props.onEnemySelect(entity, event);
+        getInitialState: function() {
+            return {
+                enemies: new util.CircularList(this.props.enemies.asArray()),
+                ignoreHover: false
+            };
         },
-        handleHover: function(entity, event) {
-            this.props.onEnemyHover(entity, event);
+        componentDidMount: function() {
+            $(window).on('rpg:keyup.menu', this.handleKeyUp);
+             this.props.onEnemyHover(this.state.enemies.getCurrent());
+        },
+        componentWillUnmount: function() {
+            $(window).off('rpg:keyup.menu');
+        },
+        handleKeyUp: function(e, key) {
+            var enemies = this.state.enemies;
+            if (key == Control.UP) {
+                enemies.prev();
+                this.props.onEnemyHover(enemies.getCurrent());
+                this.setState({enemies: enemies, ignoreHover: true});
+            } else if (key == Control.DOWN) {
+                enemies.next();
+                this.props.onEnemyHover(enemies.getCurrent());
+                this.setState({enemies: enemies, ignoreHover: true});
+            } else if (key == Control.ENTER) {
+                this.handleClick(enemies.getCurrent());
+            }
+        },
+        handleClick: function(entity) {
+            this.props.onEnemySelect(entity);
+        },
+        handleHover: function(entity) {
+            if (entity === null) {
+                this.setState({ignoreHover: false});
+                return;
+            }
+
+            if (this.state.ignoreHover) {
+                return;
+            }
+
+            var enemies = this.state.enemies;
+            enemies.setCurrent(entity);
+            this.props.onEnemyHover(entity);
         },
         render: function() {
             var self = this;
+            var selectedEnemy = this.state.enemies.getCurrent();
             var createItem = function(entity) {
-                if (entity.isDead()) {
-                    return <tr></tr>;
+                if (entity == selectedEnemy) {
+                    return (
+                        <tr
+                            className="selected"
+                            onClick={self.handleClick.bind(self, entity)}
+                            onMouseEnter={self.handleHover.bind(self, entity)}
+                            onMouseLeave={self.handleHover.bind(self, null)}>
+                            <td className="name">{entity.attr.name}</td>
+                        </tr>
+                    );
+                } else {
+                    return (
+                        <tr
+                            onClick={self.handleClick.bind(self, entity)}
+                            onMouseEnter={self.handleHover.bind(self, entity)}
+                            onMouseLeave={self.handleHover.bind(self, null)}>
+                            <td className="name">{entity.attr.name}</td>
+                        </tr>
+                    );
                 }
-
-                return (
-                    <tr
-                        onClick={self.handleClick.bind(self, entity)}
-                        onMouseEnter={self.handleHover.bind(self, entity)}
-                        onMouseLeave={self.handleHover.bind(self, null)}>
-                        <td className="name">{entity.attr.name}</td>
-                    </tr>
-                )
             };
             return (
                 <div className="enemy-wrap">
                 <table className="entity-status">
-                    {this.props.enemies.map(createItem)}
+                    {this.state.enemies.asArray().map(createItem)}
                 </table>
                 </div>
             );
@@ -40,24 +91,80 @@
 
 
     var ActionMenu = React.createClass({
-        handleAttack: function(event) {
-            this.props.onActionSelect(event);
+        getInitialState: function() {
+            return {
+                ignoreHover: false,
+                actions: new util.CircularList(this.props.actions)
+            };
+        },
+        componentDidMount: function() {
+            $(window).on('rpg:keyup.menu', this.handleKeyUp);
+        },
+        componentWillUnmount: function() {
+            $(window).off('rpg:keyup.menu');
+        },
+        handleKeyUp: function(e, key) {
+            var actions = this.state.actions;
+            if (key == Control.UP) {
+                actions.prev();
+                this.setState({actions: actions, ignoreHover: true});
+            } else if (key == Control.DOWN) {
+                actions.next();
+                this.setState({actions: actions, ignoreHover: true});
+            } else if (key == Control.ENTER) {
+                this.handleSelectAction(actions.getCurrent());
+            }
+        },
+        handleHover: function(action) {
+            if (action === null) {
+                this.setState({ignoreHover: false});
+                return;
+            }
+
+            if (this.state.ignoreHover) {
+                return;
+            }
+
+            var actions = this.state.actions;
+            actions.setCurrent(action);
+            this.setState({actions: actions});
+        },
+        handleSelectAction: function(action) {
+            // TODO(richard-to): Currently all actions selected will be handled as attack
+            this.props.onActionSelect(action);
         },
         render: function() {
+            var self = this;
+            var selectedAction = this.state.actions.getCurrent();
+            var createItem = function(action) {
+                if (action == selectedAction) {
+                    return (
+                        <tr className="selected">
+                            <td
+                                onClick={self.handleSelectAction.bind(self, action)}
+                                onMouseEnter={self.handleHover.bind(self, action)}
+                                onMouseLeave={self.handleHover.bind(self, null)}>
+                                {action}
+                            </td>
+                        </tr>
+                    );
+                } else {
+                    return (
+                        <tr>
+                            <td
+                                onClick={self.handleSelectAction.bind(self, action)}
+                                onMouseEnter={self.handleHover.bind(self, action)}
+                                onMouseLeave={self.handleHover.bind(self, null)}>
+                                {action}
+                            </td>
+                        </tr>
+                    );
+                }
+            };
             return (
                 <div className="action-wrap">
                 <table className="action-status">
-                    <tr>
-                        <td onClick={this.handleAttack}>Attack</td>
-                    </tr><tr>
-                        <td>Defend</td>
-                    </tr><tr>
-                        <td>Magic</td>
-                    </tr><tr>
-                        <td>Items</td>
-                    </tr><tr>
-                        <td>Run</td>
-                    </tr>
+                    {this.state.actions.asArray().map(createItem)}
                 </table>
                 </div>
             );
@@ -69,21 +176,35 @@
     var BattleMenu = React.createClass({
         getInitialState: function() {
             return {
-                msgIndex: 0,
+                messages: new util.CircularList(this.props.messages),
             };
         },
+        componentDidMount: function() {
+            $(window).on('rpg:keyup.menu', this.handleKeyUp);
+        },
+        componentWillUnmount: function() {
+            $(window).off('rpg:keyup.menu');
+        },
+        handleKeyUp: function(e, key) {
+            if (key == Control.ENTER) {
+                this.handleNextMsg();
+            }
+        },
         handleNextMsg: function() {
-            var msgIndex = this.state.msgIndex + 1;
-            if (msgIndex < this.props.messages.length) {
-                this.setState({msgIndex: msgIndex});
-            } else {
+            if (this.state.messages.isLast()) {
                 this.props.onMsgsRead();
+            } else {
+                var messages = this.state.messages;
+                messages.next();
+                this.setState({
+                    messages: messages
+                });
             }
         },
         render: function() {
             return (
                 <div className="battle-result-wrap" onClick={this.handleNextMsg}>
-                    {this.props.messages[this.state.msgIndex]}
+                    {this.state.messages.getCurrent()}
                 </div>
             );
         }
@@ -119,7 +240,7 @@
             return (
                 <div className="party-wrap">
                 <table className="entity-status">
-                    {this.props.party.map(createItem)}
+                    {this.props.heroes.asArray().map(createItem)}
                 </table>
                 </div>
             );
@@ -137,15 +258,23 @@
 
     var App = React.createClass({
         getInitialState: function() {
+            var sprites = new util.EntityHashTable();
+            sprites.addFromArrays(this.props.heroes, this.props.heroSprites)
+                .addFromArrays(this.props.enemies, this.props.enemySprites);
+
             return {
                 showActions: MenuContext.SELECT_ACTION,
                 enemyTurn: 0,
                 partyTurn: 0,
+                enemies: new util.CircularList(this.props.enemies),
+                heroes: new util.CircularList(this.props.heroes),
+                sprites: sprites,
                 messages: []
             };
         },
         componentDidMount: function() {
-             this.props.partySprites[this.state.partyTurn].showHighlight();
+            var sprite = this.state.sprites.get(this.state.heroes.getCurrent());
+            sprite.showHighlight();
         },
         handleMsgsRead: function() {
             this.props.onBattleFinished();
@@ -153,118 +282,147 @@
         handleActionSelect: function(event) {
             this.setState({showActions: MenuContext.SELECT_ENEMY});
         },
-        // TODO(richard-to): Clean up this method. Lot of loops and conditionals.
-        handleEnemySelect: function(entity, event) {
+        handleEnemySelect: function(target) {
             var self = this;
-            var partyTurn = this.state.partyTurn;
-            if (partyTurn < this.props.party.length) {
-                this.setState({showActions: MenuContext.NO_ACTIONS});
-                if (this.props.party[partyTurn].isDead()) {
-                    this.setNextTurn();
-                } else {
-                    this.props.partySprites[this.state.partyTurn].hideHighlight();
-                    var attackDamage = entity.takeDamage(this.props.party[partyTurn].attack());
-                    this.props.partySprites[partyTurn].attackLeft(function() {
-                        var enemies = self.props.enemies;
-                        var enemyCount = enemies.length;
-                        var deadCount = 0;
-                        for (var i = 0; i < enemyCount; i++) {
-                            self.props.enemySprites[i].hideHighlight();
-                            if (enemies[i] == entity) {
-                                self.props.enemySprites[i].showDamage(attackDamage);
-                                if (self.props.enemies[i].isDead()) {
-                                    self.props.enemySprites[i].faint();
-                                }
-                            }
-                            if (self.props.enemies[i].isDead()) {
-                                deadCount += 1;
-                            }
-                        }
-                        if (deadCount == enemyCount) {
-                            var expGained = 0;
-                            var coinsEarned = 0;
-                            for (var i = 0; i < enemyCount; i++) {
-                                expGained += self.props.enemies[i].attr.exp;
-                                coinsEarned += self.props.enemies[i].attr.coins;
-                            }
-                            self.setState({
-                                messages: [
-                                    "You gained " + expGained + " exp.",
-                                    "You earned " + coinsEarned + " coins."
-                                ],
-                                showActions: MenuContext.SHOW_RESULTS
-                            });
-                        } else if (partyTurn < self.props.party.length) {
-                            self.setNextTurn();
-                        } else {
-                            self.runEnemyAttackSequence();
-                        }
+            var heroes = this.state.heroes;
+            var enemies = this.state.enemies;
+            var sprites = this.state.sprites;
+
+            this.setState({showActions: MenuContext.NO_ACTIONS});
+
+            var hero = heroes.getCurrent();
+            var attackDamage = target.takeDamage(hero.attack());
+            var heroSprite = sprites.get(hero);
+
+            heroSprite.hideHighlight();
+            heroSprite.attackLeft(function() {
+                enemies.reset();
+                while (true) {
+                    var enemy = enemies.getCurrent();
+                    var enemySprite = sprites.get(enemy);
+
+                    enemySprite.hideHighlight();
+                    if (enemy == target) {
+                        enemySprite.showDamage(attackDamage);
+                    }
+
+                    if (enemy.isDead()) {
+                        enemySprite.faint();
+                    }
+
+                    if (enemies.isLast()) {
+                        break;
+                    } else {
+                        enemies.next();
+                    }
+                }
+
+                if (target.isDead()) {
+                    enemies.remove(target);
+                }
+
+                self.setState({
+                    heroes: heroes,
+                    enemies: enemies
+                });
+
+                if (enemies.isEmpty()) {
+                    var expGained = 0;
+                    var coinsEarned = 0;
+                    for (var i = 0; i < self.props.enemies.length; i++) {
+                        expGained += self.props.enemies[i].attr.exp;
+                        coinsEarned += self.props.enemies[i].attr.coins;
+                    }
+                    self.setState({
+                        messages: [
+                            "You gained " + expGained + " exp.",
+                            "You earned " + coinsEarned + " coins."
+                        ],
+                        showActions: MenuContext.SHOW_RESULTS
                     });
-                    this.setState({partyTurn: ++partyTurn});
+                } else if (heroes.isLast()) {
+                    heroes.reset();
+                    enemies.reset();
+                    self.runEnemyAttackSequence();
+                } else {
+                    heroes.next();
+                    nextHeroSprite = sprites.get(heroes.getCurrent());
+                    nextHeroSprite.showHighlight();
+                    self.setState({
+                        showActions: MenuContext.SELECT_ACTION
+                    });
                 }
-            }
-        },
-        setNextTurn: function() {
-            var partyTurn = this.state.partyTurn;
-            for(partyTurn; partyTurn < this.props.party.length; partyTurn++) {
-                if (this.props.party[partyTurn].isDead() === false) {
-                    this.props.partySprites[partyTurn].showHighlight();
-                    this.setState({showActions: MenuContext.SELECT_ACTION});
-                    break;
-                }
-            }
-            if (partyTurn < this.props.party.length) {
-                this.setState({partyTurn: partyTurn});
-            } else {
-                this.runEnemyAttackSequence();
-            }
+            });
         },
         runEnemyAttackSequence: function() {
             var self = this;
-            var enemyTurn = this.state.enemyTurn;
-            if (enemyTurn < this.props.enemySprites.length) {
-                if (this.props.enemies[enemyTurn].isDead()) {
-                    this.setState({enemyTurn: ++enemyTurn});
-                    this.runEnemyAttackSequence();
-                } else {
-                    var partyIdx = null;
-                    while (partyIdx === null) {
-                        partyIdx = Math.floor(Math.random() * this.props.party.length);
-                        if (this.props.party[partyIdx].isDead()) {
-                            partyIdx = null;
-                        }
+            var heroes = this.state.heroes;
+            var enemies = this.state.enemies;
+            var sprites = this.state.sprites;
+
+            var enemy = enemies.getCurrent();
+            var target = heroes.getRandom();
+            var attackDamage = target.takeDamage(enemy.attack());
+            var enemySprite = sprites.get(enemy);
+
+            enemySprite.attackRight(function() {
+                while (true) {
+                    var hero = heroes.getCurrent();
+                    var heroSprite = sprites.get(hero);
+
+                    if (hero == target) {
+                        heroSprite.showDamage(attackDamage);
                     }
 
-                    var attackDamage = this.props.party[partyIdx].takeDamage(
-                        this.props.enemies[enemyTurn].attack());
-                    this.props.enemySprites[enemyTurn].attackRight(function() {
-                        for (var i = 0; i < self.props.party.length; i++) {
-                            if (self.props.party[i] == self.props.party[partyIdx]) {
-                                self.props.partySprites[i].showDamage(attackDamage);
-                                if (self.props.party[i].isDead()) {
-                                    self.props.partySprites[i].faint();
-                                }
-                            }
-                        }
-                        self.runEnemyAttackSequence();
-                    });
-                    this.setState({enemyTurn: ++enemyTurn});
+                    if (hero.isDead()) {
+                        heroSprite.faint();
+                    }
+
+                    if (heroes.isLast()) {
+                        break;
+                    } else {
+                        heroes.next();
+                    }
                 }
-            } else {
-                this.setState({enemyTurn: 0});
-                this.setState({partyTurn: 0});
-                this.props.partySprites[this.state.partyTurn].showHighlight();
-                this.setState({showActions: MenuContext.SELECT_ACTION});
-            }
-        },
-        handleEnemyHover: function(entity, event) {
-            var enemies = this.props.enemies;
-            var enemyCount = enemies.length;
-            for (var i = 0; i < enemyCount; i++) {
-                if (enemies[i] === entity) {
-                    this.props.enemySprites[i].showHighlight();
+
+
+                if (heroes.isEmpty()) {
+                    // End Battle
+                } else if (enemies.isLast()) {
+                    enemies.reset();
+                    heroes.reset();
+                    var nextHeroSprite = sprites.get(heroes.getCurrent());
+                    nextHeroSprite.showHighlight();
+                    self.setState({
+                        showActions: MenuContext.SELECT_ACTION,
+                        heroes: heroes,
+                        enemies: enemies
+                    });
                 } else {
-                    this.props.enemySprites[i].hideHighlight();
+                    enemies.next();
+                    self.runEnemyAttackSequence();
+                }
+            });
+        },
+        handleEnemyHover: function(entity) {
+            var enemies = this.state.enemies;
+            if (enemies.isEmpty()) {
+                return;
+            }
+
+            while (true) {
+                var enemy = enemies.getCurrent();
+                var sprite = this.state.sprites.get(enemy);
+                if (enemy === entity) {
+                    sprite.showHighlight();
+                } else {
+                    sprite.hideHighlight();
+                }
+
+                if (enemies.isLast()) {
+                    break;
+                } else {
+                    enemies.next();
                 }
             }
         },
@@ -272,30 +430,38 @@
             if (this.state.showActions == MenuContext.SELECT_ACTION) {
                 return (
                     <div className="combat-wrap">
-                        <ActionMenu onActionSelect={this.handleActionSelect} />
-                        <PartyMenu party={this.props.party} selected={this.props.party[this.state.partyTurn]} />
+                        <ActionMenu
+                            onActionSelect={this.handleActionSelect}
+                            actions={this.state.heroes.getCurrent().getActions()} />
+                        <PartyMenu
+                            heroes={this.state.heroes}
+                            selected={this.state.heroes.getCurrent()} />
                     </div>
                 );
             } else if (this.state.showActions == MenuContext.SELECT_ENEMY) {
                 return (
                     <div className="combat-wrap">
                         <EnemyMenu
-                            enemies={this.props.enemies}
+                            enemies={this.state.enemies}
                             onEnemySelect={this.handleEnemySelect}
                             onEnemyHover={this.handleEnemyHover} />
-                        <PartyMenu party={this.props.party} selected={this.props.party[this.state.partyTurn]} />
+                        <PartyMenu
+                            heroes={this.state.heroes}
+                            selected={this.state.heroes.getCurrent()} />
                     </div>
                 );
             } else if (this.state.showActions == MenuContext.SHOW_RESULTS) {
-                    return (
+                return (
                         <div className="combat-wrap">
-                            <BattleMenu messages={this.state.messages} onMsgsRead={this.handleMsgsRead} />
+                            <BattleMenu
+                                messages={this.state.messages}
+                                onMsgsRead={this.handleMsgsRead} />
                         </div>
                     );
             } else {
                 return (
                     <div className="combat-wrap">
-                        <PartyMenu party={this.props.party} />
+                        <PartyMenu heroes={this.state.heroes} />
                     </div>
                 );
             }

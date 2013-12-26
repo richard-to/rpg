@@ -1,10 +1,6 @@
 (function(window, undefined) {
     var levelSettings = {
-        screen:{
-            tileSize: 64,
-            gridWidth: 10,
-            gridHeight: 7
-        },
+        screen: new rpg.util.Screen(64, 10, 7),
         areas: {
             dungeon: 'dungeon',
             arena: 'arena'
@@ -120,7 +116,7 @@
             },
             arena: {
                 start: {x: 8, y: 2},
-                menuDiv: 'combat-menu-container',
+                menuDiv: document.getElementById('combat-menu-container'),
             }
         }
     };

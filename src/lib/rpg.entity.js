@@ -20,7 +20,8 @@
             expGained: 0
         };
         _.extend(this.attr, options);
-
+        this.prefix = this.attr.name.replace(' ', '_');
+        this.key =  _.uniqueId(this.prefix);
         if (this.attr.hpMax < this.attr.hp) {
             this.attr.hpMax = this.attr.hp;
         }
@@ -65,6 +66,11 @@
     };
     Corrina.prototype = Object.create(Entity.prototype);
     Corrina.prototype.constructor = Entity;
+    // TODO(richard-to): Improve this. Not now though...
+    Corrina.prototype.getActions = function() {
+        return ['Attack', 'Defend', 'Magic', 'Items', 'Run'];
+    };
+
     entity.Corrina = Corrina;
 
     // Character with a powerful attack, but low accuracy, defense, and
@@ -81,6 +87,10 @@
     };
     Seth.prototype = Object.create(Entity.prototype);
     Seth.prototype.constructor = Seth;
+    Seth.prototype.getActions = function() {
+        return ['Attack', 'Defend', 'Items', 'Run'];
+    };
+
     entity.Seth = Seth;
 
     // First level enemy
