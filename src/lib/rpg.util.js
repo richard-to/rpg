@@ -153,6 +153,16 @@
         return this;
     };
 
+    CircularList.prototype.filter = function(callback) {
+        var newList = [];
+        for (var i = 0; i < this.list.length; i++) {
+            if (callback(this.list[i])) {
+                newList.push(this.list[i]);
+            }
+        }
+        return new CircularList(newList);
+    };
+
     CircularList.prototype.reset = function() {
         this.index = 0;
     };

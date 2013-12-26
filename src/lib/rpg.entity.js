@@ -78,7 +78,7 @@
     var Seth = function(options) {
         Entity.call(this, {
             name: 'Seth',
-            hp: 100,
+            hp: 10,
             mp: 0,
             att: 40,
             acc: 10,

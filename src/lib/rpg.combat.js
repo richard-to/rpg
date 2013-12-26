@@ -261,13 +261,14 @@
             var sprites = new util.EntityHashTable();
             sprites.addFromArrays(this.props.heroes, this.props.heroSprites)
                 .addFromArrays(this.props.enemies, this.props.enemySprites);
-
+            // TODO(richard-to): Temp fix for now
+            var heroes = new util.CircularList(this.props.heroes);
             return {
                 showActions: MenuContext.SELECT_ACTION,
                 enemyTurn: 0,
                 partyTurn: 0,
                 enemies: new util.CircularList(this.props.enemies),
-                heroes: new util.CircularList(this.props.heroes),
+                heroes: heroes.filter(function(hero) { return !hero.isDead(); }),
                 sprites: sprites,
                 messages: []
             };
@@ -366,6 +367,7 @@
             var enemySprite = sprites.get(enemy);
 
             enemySprite.attackRight(function() {
+                var heroToRemove = null;
                 while (true) {
                     var hero = heroes.getCurrent();
                     var heroSprite = sprites.get(hero);
@@ -376,6 +378,7 @@
 
                     if (hero.isDead()) {
                         heroSprite.faint();
+                        heroToRemove = hero;
                     }
 
                     if (heroes.isLast()) {
@@ -385,6 +388,7 @@
                     }
                 }
 
+                heroes.remove(heroToRemove);
 
                 if (heroes.isEmpty()) {
                     // End Battle

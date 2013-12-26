@@ -299,6 +299,7 @@
     };
 
     // Once external assets are loaded, everything else is initialized.
+    // Clean this up. Same with Dungeon class here too
     GameArena.prototype.onAssetsLoad = function() {
         this.sprites = [];
         this.partySprites = [];
@@ -360,19 +361,22 @@
     };
 
     // Initializes party members.
+    // TODO(richard-to): Needs fixing
     GameArena.prototype.initParty = function() {
         var party = this.playerData.party;
         for (var i = 0; i < party.length; i++) {
-            var frames = {};
-            for (var name in this.heroFrames[party[i]]) {
-                frames[name] = this.spritemeta.frames[this.heroFrames[party[i]][name]];
+            if (!this.party[i + 1].isDead()) {
+                var frames = {};
+                for (var name in this.heroFrames[party[i]]) {
+                    frames[name] = this.spritemeta.frames[this.heroFrames[party[i]][name]];
+                }
+                var partyMember = new graphics.SpriteAnim(frames, this.map);
+                partyMember.x = 8;
+                partyMember.y = 2 + (i + 1) * 2;
+                partyMember.faceLeft();
+                this.partySprites.push(partyMember);
+                this.sprites.unshift(partyMember);
             }
-            var partyMember = new graphics.SpriteAnim(frames, this.map);
-            partyMember.x = 8;
-            partyMember.y = 2 + (i + 1) * 2;
-            partyMember.faceLeft();
-            this.partySprites.push(partyMember);
-            this.sprites.unshift(partyMember);
         }
     };
 
