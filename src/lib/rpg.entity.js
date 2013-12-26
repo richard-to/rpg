@@ -57,7 +57,7 @@
     var Corrina = function(options) {
         Entity.call(this, {
             name: 'Corrina',
-            hp: 300,
+            hp: 10,
             mp: 20,
             att: 20,
             acc: 15,
@@ -78,7 +78,7 @@
     var Seth = function(options) {
         Entity.call(this, {
             name: 'Seth',
-            hp: 10,
+            hp: 250,
             mp: 0,
             att: 40,
             acc: 10,

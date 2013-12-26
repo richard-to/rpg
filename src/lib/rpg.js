@@ -10,7 +10,6 @@
     var Control = util.Control;
 
 
-
     // Animation loop. Draws sprites and backgrounds in a continous loop.
     var AnimLoop = function(ctx, canvas, level) {
         this.animStopped = false;
@@ -158,6 +157,7 @@
     };
 
     GameDungeon.prototype.suspend = function() {
+        // TODO(richard-to): Need a good way to create unique identifiers. Use underscore uniqueId?
         $(window).off('.dungeon');
         if (this.animLoop) {
             this.animLoop.animStopped = true;
@@ -356,8 +356,11 @@
         this.heroSprite.x = 8;
         this.heroSprite.y = 2;
         this.heroSprite.faceLeft();
-        this.sprites.unshift(this.heroSprite);
         this.partySprites.unshift(this.heroSprite);
+        // TODO(richard-to): Is Alive instead?
+        if (!this.party[0].isDead()) {
+            this.sprites.unshift(this.heroSprite);
+        }
     };
 
     // Initializes party members.

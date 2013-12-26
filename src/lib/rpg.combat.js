@@ -191,14 +191,14 @@
             }
         },
         handleNextMsg: function() {
-            if (this.state.messages.isLast()) {
-                this.props.onMsgsRead();
-            } else {
+            if (!this.state.messages.isLast()){
                 var messages = this.state.messages;
                 messages.next();
                 this.setState({
                     messages: messages
                 });
+            } else if (!this.props.heroes.isEmpty()) {
+                this.props.onMsgsRead();
             }
         },
         render: function() {
@@ -328,6 +328,8 @@
                 });
 
                 if (enemies.isEmpty()) {
+                    // TODO(richard-to): Clean this up. Also exp, coins need to be added
+                    // appropriately
                     var expGained = 0;
                     var coinsEarned = 0;
                     for (var i = 0; i < self.props.enemies.length; i++) {
@@ -391,7 +393,13 @@
                 heroes.remove(heroToRemove);
 
                 if (heroes.isEmpty()) {
-                    // End Battle
+                    // TODO(richard-to): For now the game just freezes when you lose.
+                    self.setState({
+                        messages: [
+                            "You lost. Reload to restart the game."
+                        ],
+                        showActions: MenuContext.SHOW_RESULTS
+                    });
                 } else if (enemies.isLast()) {
                     enemies.reset();
                     heroes.reset();
@@ -413,7 +421,7 @@
             if (enemies.isEmpty()) {
                 return;
             }
-
+            enemies.reset();
             while (true) {
                 var enemy = enemies.getCurrent();
                 var sprite = this.state.sprites.get(enemy);
@@ -459,6 +467,7 @@
                         <div className="combat-wrap">
                             <BattleMenu
                                 messages={this.state.messages}
+                                heroes={this.state.heroes}
                                 onMsgsRead={this.handleMsgsRead} />
                         </div>
                     );

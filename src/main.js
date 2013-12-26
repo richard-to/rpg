@@ -1,10 +1,12 @@
 (function(window, undefined) {
     var levelSettings = {
         screen: new rpg.util.Screen(64, 10, 7),
+
         areas: {
             dungeon: 'dungeon',
             arena: 'arena'
         },
+
         assets: {
             dungeon: {
                 map: 'map.json',
