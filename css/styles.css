@@ -8,6 +8,29 @@ body {
     width: 640px;
 }
 
+.math-wrap {
+    background: rgba(50, 50, 50, .8);
+    border: 1px solid #ececec;
+    box-sizing: border-box;
+    color: #fff;
+    font-family: monospace;
+    font-size: 40px;
+    position: absolute;
+    bottom: 240px;
+    left: 160px;
+}
+
+.math-wrap p {
+    margin: 0;
+    padding:20px;
+}
+
+.math-wrap input {
+    font-family: monospace;
+    font-size: 40px;
+    width: 60px;
+}
+
 .party-wrap {
     background: rgba(50, 50, 50, .8);
     border: 1px solid #ececec;

@@ -191,7 +191,7 @@
             }
         },
         handleNextMsg: function() {
-            if (!this.state.messages.isLast()){
+            if (!this.state.messages.isLast()) {
                 var messages = this.state.messages;
                 messages.next();
                 this.setState({
@@ -210,6 +210,41 @@
         }
     });
     combat.BattleMenu = BattleMenu;
+
+
+    var MathMenu = React.createClass({
+        getInitialState: function() {
+            var num1 =  Math.floor(Math.random() * this.props.maxNum);
+            var num2 = Math.floor(Math.random() * this.props.maxNum);;
+            return {
+                num1: num1,
+                num2: num2,
+                answer: num1 + num2
+            };
+        },
+        componentDidMount: function() {
+            this.refs.author.getDOMNode().focus();
+        },
+        handleKeyUp: function(e) {
+            if (e.which == Control.ENTER) {
+                if (parseInt(this.refs.author.getDOMNode().value) == this.state.answer) {
+                    this.props.onAnsweredProblem(true);
+                } else {
+                    this.props.onAnsweredProblem(false);
+                }
+            }
+        },
+        render: function() {
+            return (
+                <div className="math-wrap">
+                    <p>
+                        {this.state.num1} + {this.state.num2} =
+                        <input type="text" ref="author" onKeyUp={this.handleKeyUp} />
+                    </p>
+                </div>
+            );
+        }
+    });
 
     var PartyMenu = React.createClass({
         render: function() {
@@ -253,7 +288,8 @@
         NO_ACTIONS: 0,
         SELECT_ACTION: 1,
         SELECT_ENEMY: 2,
-        SHOW_RESULTS: 3
+        SHOW_RESULTS: 3,
+        SHOW_MATH: 4
     };
 
     var App = React.createClass({
@@ -281,18 +317,29 @@
             this.props.onBattleFinished();
         },
         handleActionSelect: function(event) {
-            this.setState({showActions: MenuContext.SELECT_ENEMY});
+            this.setState({
+                showActions: MenuContext.SELECT_ENEMY});
         },
         handleEnemySelect: function(target) {
+            this.setState({
+                showActions: MenuContext.SHOW_MATH,
+                target: target
+            });
+        },
+        handleAnsweredProblem: function(success) {
             var self = this;
             var heroes = this.state.heroes;
             var enemies = this.state.enemies;
             var sprites = this.state.sprites;
+            var target = this.state.target;
 
-            this.setState({showActions: MenuContext.NO_ACTIONS});
+            this.setState({
+                showActions: MenuContext.NO_ACTIONS,
+                target: null
+            });
 
             var hero = heroes.getCurrent();
-            var attackDamage = target.takeDamage(hero.attack());
+            var attackDamage = (success) ? target.takeDamage(hero.attack()) : 0;
             var heroSprite = sprites.get(hero);
 
             heroSprite.hideHighlight();
@@ -464,13 +511,24 @@
                 );
             } else if (this.state.showActions == MenuContext.SHOW_RESULTS) {
                 return (
-                        <div className="combat-wrap">
-                            <BattleMenu
-                                messages={this.state.messages}
-                                heroes={this.state.heroes}
-                                onMsgsRead={this.handleMsgsRead} />
-                        </div>
+                    <div className="combat-wrap">
+                        <BattleMenu
+                            messages={this.state.messages}
+                            heroes={this.state.heroes}
+                            onMsgsRead={this.handleMsgsRead} />
+                    </div>
                     );
+            } else if (this.state.showActions == MenuContext.SHOW_MATH) {
+                return (
+                    <div className="combat-wrap">
+                    <MathMenu
+                        maxNum="20"
+                        onAnsweredProblem={this.handleAnsweredProblem} />
+                    <PartyMenu
+                        heroes={this.state.heroes}
+                        selected={this.state.heroes.getCurrent()} />
+                    </div>
+                );
             } else {
                 return (
                     <div className="combat-wrap">
