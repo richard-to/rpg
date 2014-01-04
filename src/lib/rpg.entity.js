@@ -1,6 +1,9 @@
 /** @jsx React.DOM */
 (function(window, undefined) {
 
+    // TODO(richard-to): Need to make sure actions loaded. Time to use RequireJS?
+    var actions = rpg.actions;
+
     var entity = {};
 
     // Base Entity to represent heroes, enemies and NPCs
@@ -31,8 +34,10 @@
         }
     };
 
-    Entity.prototype.attack = function() {
-        return Math.floor(Math.random() * (this.attr.att - this.attr.acc + 1)) + this.attr.acc;
+    // TODO(richard-to): Need to account for skill bonus along with base attack
+    Entity.prototype.attack = function(bonus) {
+        var attack = (bonus) ? (bonus + this.attr.att) : this.attr.att;
+        return Math.floor(Math.random() * (attack - this.attr.acc + 1)) + this.attr.acc;
     };
 
     Entity.prototype.takeDamage = function(damage) {
@@ -68,9 +73,8 @@
     Corrina.prototype.constructor = Entity;
     // TODO(richard-to): Improve this. Not now though...
     Corrina.prototype.getActions = function() {
-        return ['Attack', 'Defend', 'Magic', 'Items', 'Run'];
+        return [new actions.Slash(), new actions.Strike()];
     };
-
     entity.Corrina = Corrina;
 
     // Character with a powerful attack, but low accuracy, defense, and
@@ -88,9 +92,8 @@
     Seth.prototype = Object.create(Entity.prototype);
     Seth.prototype.constructor = Seth;
     Seth.prototype.getActions = function() {
-        return ['Attack', 'Defend', 'Items', 'Run'];
+        return [new actions.Strike(), new actions.Slash()];
     };
-
     entity.Seth = Seth;
 
     // First level enemy

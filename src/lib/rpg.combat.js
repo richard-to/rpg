@@ -59,30 +59,33 @@
             var createItem = function(entity) {
                 if (entity == selectedEnemy) {
                     return (
-                        <tr
+                        <li
                             className="selected"
                             onClick={self.handleClick.bind(self, entity)}
                             onMouseEnter={self.handleHover.bind(self, entity)}
                             onMouseLeave={self.handleHover.bind(self, null)}>
-                            <td className="name">{entity.attr.name}</td>
-                        </tr>
+                            <h3 className="skill-name">{entity.attr.name}</h3>
+                        </li>
                     );
                 } else {
                     return (
-                        <tr
+                        <li
                             onClick={self.handleClick.bind(self, entity)}
                             onMouseEnter={self.handleHover.bind(self, entity)}
                             onMouseLeave={self.handleHover.bind(self, null)}>
-                            <td className="name">{entity.attr.name}</td>
-                        </tr>
+                            <h3 className="skill-name">{entity.attr.name}</h3>
+                        </li>
                     );
                 }
             };
             return (
-                <div className="enemy-wrap">
-                <table className="entity-status">
-                    {this.state.enemies.asArray().map(createItem)}
-                </table>
+                <div className="menu-wrap entity-wrap">
+                    <ul className="menu-tabs">
+                        <li className="menu-tab-selected">Enemies</li>
+                    </ul>
+                    <ul className="menu-list">
+                        {this.state.enemies.asArray().map(createItem)}
+                    </ul>
                 </div>
             );
         }
@@ -137,35 +140,38 @@
             var self = this;
             var selectedAction = this.state.actions.getCurrent();
             var createItem = function(action) {
-                if (action == selectedAction) {
+                if (action.attr.name == selectedAction.attr.name) {
                     return (
-                        <tr className="selected">
-                            <td
-                                onClick={self.handleSelectAction.bind(self, action)}
-                                onMouseEnter={self.handleHover.bind(self, action)}
-                                onMouseLeave={self.handleHover.bind(self, null)}>
-                                {action}
-                            </td>
-                        </tr>
+                        <li
+                            className="selected"
+                            onClick={self.handleSelectAction.bind(self, action)}
+                            onMouseEnter={self.handleHover.bind(self, action)}
+                            onMouseLeave={self.handleHover.bind(self, null)}>
+                            <h3 className="skill-name">{action.attr.name} Level {action.attr.lvl}</h3>
+                            <p className="skill-description">{action.attr.description}</p>
+                        </li>
                     );
                 } else {
                     return (
-                        <tr>
-                            <td
-                                onClick={self.handleSelectAction.bind(self, action)}
-                                onMouseEnter={self.handleHover.bind(self, action)}
-                                onMouseLeave={self.handleHover.bind(self, null)}>
-                                {action}
-                            </td>
-                        </tr>
+                        <li
+                            onClick={self.handleSelectAction.bind(self, action)}
+                            onMouseEnter={self.handleHover.bind(self, action)}
+                            onMouseLeave={self.handleHover.bind(self, null)}>
+                            <h3 className="skill-name">{action.attr.name} Level {action.attr.lvl}</h3>
+                            <p className="skill-description">{action.attr.description}</p>
+                        </li>
                     );
                 }
             };
             return (
-                <div className="action-wrap">
-                <table className="action-status">
-                    {this.state.actions.asArray().map(createItem)}
-                </table>
+                <div className="menu-wrap skill-wrap">
+                    <ul className="menu-tabs">
+                        <li className="menu-tab-selected">Skills</li>
+                        <li>Items</li>
+                    </ul>
+                    <ul className="menu-list">
+                        {this.state.actions.asArray().map(createItem)}
+                    </ul>
                 </div>
             );
         }
@@ -203,7 +209,7 @@
         },
         render: function() {
             return (
-                <div className="battle-result-wrap" onClick={this.handleNextMsg}>
+                <div className="battle-result-wrap overlay-wrap" onClick={this.handleNextMsg}>
                     {this.state.messages.getCurrent()}
                 </div>
             );
@@ -214,33 +220,84 @@
 
     var MathMenu = React.createClass({
         getInitialState: function() {
-            var num1 =  Math.floor(Math.random() * this.props.maxNum);
-            var num2 = Math.floor(Math.random() * this.props.maxNum);;
+            var problemSet = this.props.action.select();
+            problemSet.nextProblem();
             return {
-                num1: num1,
-                num2: num2,
-                answer: num1 + num2
+                problemSet: problemSet
             };
         },
         componentDidMount: function() {
-            this.refs.author.getDOMNode().focus();
+            this.refs.answer.getDOMNode().focus();
         },
-        handleKeyUp: function(e) {
-            if (e.which == Control.ENTER) {
-                if (parseInt(this.refs.author.getDOMNode().value) == this.state.answer) {
-                    this.props.onAnsweredProblem(true);
+        handleAnswer: function(e) {
+            if (e.which == Control.ENTER || e.type === 'click') {
+                this.state.problemSet.validate(this.refs.answer.getDOMNode().value);
+                if (this.state.problemSet.empty()) {
+                    this.props.onAnsweredProblem(
+                        this.props.action.calcAttack(this.state.problemSet));
                 } else {
-                    this.props.onAnsweredProblem(false);
+                    this.refs.answer.getDOMNode().value = "";
+                    this.state.problemSet.nextProblem();
+                    this.setState({
+                        problemSet: this.state.problemSet
+                    });
                 }
             }
         },
         render: function() {
+            var self = this;
+            var action = this.props.action;
+            var attempted = this.state.problemSet.attempted;
+            var correct = this.state.problemSet.correct;
+
+            var steps = _.range(1, action.attr.numProblems + 1);
+
+            var displaySteps = function(step) {
+                if (step === attempted) {
+                    return (<td className="step-current">{step}</td>);
+                } else {
+                    return (<td>{step}</td>);
+                }
+            };
+
+            var displayMeter = function(step) {
+                if (step <= correct) {
+                    return (<td className="meter-fill"></td>);
+                } else {
+                    return (<td></td>);
+                }
+            };
+            // TODO(richard-to): After all problems answered hide last problem to prevent accidental input
             return (
-                <div className="math-wrap">
-                    <p>
-                        {this.state.num1} + {this.state.num2} =
-                        <input type="text" ref="author" onKeyUp={this.handleKeyUp} />
-                    </p>
+                <div className="problem-wrap menu-wrap">
+                    <div className="skill-header">
+                        <h3 className="skill-name">{action.attr.name} Level {action.attr.lvl}</h3>
+                        <p className="skill-description">
+                            {action.attr.description}
+                        </p>
+                    </div>
+                    <div className="steps-wrap">
+                        <table className="step-tabs">
+                            <tr>
+                                {steps.map(displaySteps)}
+                            </tr>
+                        </table>
+                        <p className="step-description">{this.state.problemSet.instructions()}</p>
+                    </div>
+                   <div className="meter-wrap">
+                        <table>
+                            <tr>
+                                {steps.map(displayMeter)}
+                            </tr>
+                        </table>
+                    </div>
+                    <div className="problem-space">
+                        <span className="problem-text">
+                            {this.state.problemSet.display()}
+                        </span>
+                        <input type="text" ref="answer" onKeyUp={this.handleAnswer} />
+                        <input type="submit" value="Perform Step" onClick={this.handleAnswer} />
+                    </div>
                 </div>
             );
         }
@@ -273,7 +330,7 @@
                 }
             };
             return (
-                <div className="party-wrap">
+                <div className="party-wrap overlay-wrap">
                 <table className="entity-status">
                     {this.props.heroes.asArray().map(createItem)}
                 </table>
@@ -301,8 +358,7 @@
             var heroes = new util.CircularList(this.props.heroes);
             return {
                 showActions: MenuContext.SELECT_ACTION,
-                enemyTurn: 0,
-                partyTurn: 0,
+                action: null,
                 enemies: new util.CircularList(this.props.enemies),
                 heroes: heroes.filter(function(hero) { return !hero.isDead(); }),
                 sprites: sprites,
@@ -316,8 +372,9 @@
         handleMsgsRead: function() {
             this.props.onBattleFinished();
         },
-        handleActionSelect: function(event) {
+        handleActionSelect: function(action) {
             this.setState({
+                action: action,
                 showActions: MenuContext.SELECT_ENEMY});
         },
         handleEnemySelect: function(target) {
@@ -339,7 +396,7 @@
             });
 
             var hero = heroes.getCurrent();
-            var attackDamage = (success) ? target.takeDamage(hero.attack()) : 0;
+            var attackDamage = (success) ? target.takeDamage(hero.attack(success)) : 0;
             var heroSprite = sprites.get(hero);
 
             heroSprite.hideHighlight();
@@ -489,24 +546,24 @@
             if (this.state.showActions == MenuContext.SELECT_ACTION) {
                 return (
                     <div className="combat-wrap">
-                        <ActionMenu
-                            onActionSelect={this.handleActionSelect}
-                            actions={this.state.heroes.getCurrent().getActions()} />
                         <PartyMenu
                             heroes={this.state.heroes}
                             selected={this.state.heroes.getCurrent()} />
+                        <ActionMenu
+                            onActionSelect={this.handleActionSelect}
+                            actions={this.state.heroes.getCurrent().getActions()} />
                     </div>
                 );
             } else if (this.state.showActions == MenuContext.SELECT_ENEMY) {
                 return (
                     <div className="combat-wrap">
+                        <PartyMenu
+                            heroes={this.state.heroes}
+                            selected={this.state.heroes.getCurrent()} />
                         <EnemyMenu
                             enemies={this.state.enemies}
                             onEnemySelect={this.handleEnemySelect}
                             onEnemyHover={this.handleEnemyHover} />
-                        <PartyMenu
-                            heroes={this.state.heroes}
-                            selected={this.state.heroes.getCurrent()} />
                     </div>
                 );
             } else if (this.state.showActions == MenuContext.SHOW_RESULTS) {
@@ -521,18 +578,21 @@
             } else if (this.state.showActions == MenuContext.SHOW_MATH) {
                 return (
                     <div className="combat-wrap">
-                    <MathMenu
-                        maxNum="20"
-                        onAnsweredProblem={this.handleAnsweredProblem} />
-                    <PartyMenu
-                        heroes={this.state.heroes}
-                        selected={this.state.heroes.getCurrent()} />
+                        <PartyMenu
+                            heroes={this.state.heroes}
+                            selected={this.state.heroes.getCurrent()} />
+                        <MathMenu
+                            action={this.state.action}
+                            onAnsweredProblem={this.handleAnsweredProblem} />
                     </div>
                 );
             } else {
                 return (
                     <div className="combat-wrap">
                         <PartyMenu heroes={this.state.heroes} />
+                        <MathMenu
+                            action={this.state.action}
+                            onAnsweredProblem={this.handleAnsweredProblem} />
                     </div>
                 );
             }

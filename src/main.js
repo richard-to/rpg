@@ -118,12 +118,12 @@
             },
             arena: {
                 start: {x: 8, y: 2},
-                menuDiv: document.getElementById('combat-menu-container'),
+                menuDiv: document.getElementById('menu-container'),
             }
         }
     };
 
-    var gameEngine = new rpg.GameEngine(document.getElementById('game-container'), levelSettings);
+    var gameEngine = new rpg.GameEngine(document.getElementById('canvas-container'), levelSettings);
     gameEngine.run();
 
 }(window));
