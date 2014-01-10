@@ -200,7 +200,7 @@
             return null;
         }
         var index = Math.floor(Math.random() * this.list.length);
-        return this.list[0];
+        return this.list[index];
     };
 
     CircularList.prototype.getCurrent = function() {

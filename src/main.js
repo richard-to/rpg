@@ -114,7 +114,8 @@
             dungeon: {
                 start: {x: 0, y: 1},
                 walkableTiles: [0, 18, 19, 20, 21, 22, 23, 24, 29],
-                combatProbability: 0.1
+                combatProbability: 0.1,
+                menuDiv: document.getElementById('menu-container'),
             },
             arena: {
                 start: {x: 8, y: 2},

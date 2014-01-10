@@ -180,11 +180,6 @@
 
 
     var BattleMenu = React.createClass({
-        getInitialState: function() {
-            return {
-                messages: new util.CircularList(this.props.messages),
-            };
-        },
         componentDidMount: function() {
             $(window).on('rpg:keyup.menu', this.handleKeyUp);
         },
@@ -193,24 +188,22 @@
         },
         handleKeyUp: function(e, key) {
             if (key == Control.ENTER) {
-                this.handleNextMsg();
-            }
-        },
-        handleNextMsg: function() {
-            if (!this.state.messages.isLast()) {
-                var messages = this.state.messages;
-                messages.next();
-                this.setState({
-                    messages: messages
-                });
-            } else if (!this.props.heroes.isEmpty()) {
                 this.props.onMsgsRead();
             }
         },
         render: function() {
+            var displayStats = function(stats) {
+                return (<li>{stats}</li>);
+            };
+
             return (
-                <div className="battle-result-wrap overlay-wrap" onClick={this.handleNextMsg}>
-                    {this.state.messages.getCurrent()}
+                <div className="menu-wrap battle-result-wrap">
+                    <div className="skill-header">
+                        <h3 className="skill-name">{this.props.header}</h3>
+                    </div>
+                    <ul className="menu-list">
+                        {this.props.messages.map(displayStats)}
+                    </ul>
                 </div>
             );
         }
@@ -267,6 +260,7 @@
                     return (<td></td>);
                 }
             };
+
             // TODO(richard-to): After all problems answered hide last problem to prevent accidental input
             return (
                 <div className="problem-wrap menu-wrap">
@@ -349,6 +343,7 @@
         SHOW_MATH: 4
     };
 
+
     var App = React.createClass({
         getInitialState: function() {
             var sprites = new util.EntityHashTable();
@@ -362,7 +357,8 @@
                 enemies: new util.CircularList(this.props.enemies),
                 heroes: heroes.filter(function(hero) { return !hero.isDead(); }),
                 sprites: sprites,
-                messages: []
+                messages: [],
+                header: ''
             };
         },
         componentDidMount: function() {
@@ -441,8 +437,9 @@
                         coinsEarned += self.props.enemies[i].attr.coins;
                     }
                     self.setState({
+                        header: "You won the battle!",
                         messages: [
-                            "You gained " + expGained + " exp.",
+                            "You earned " + expGained + " exp.",
                             "You earned " + coinsEarned + " coins."
                         ],
                         showActions: MenuContext.SHOW_RESULTS
@@ -493,15 +490,13 @@
                         heroes.next();
                     }
                 }
-
                 heroes.remove(heroToRemove);
 
                 if (heroes.isEmpty()) {
                     // TODO(richard-to): For now the game just freezes when you lose.
                     self.setState({
-                        messages: [
-                            "You lost. Reload to restart the game."
-                        ],
+                        header: "You lost. Reload to restart the game.",
+                        messages: [],
                         showActions: MenuContext.SHOW_RESULTS
                     });
                 } else if (enemies.isLast()) {
@@ -570,6 +565,7 @@
                 return (
                     <div className="combat-wrap">
                         <BattleMenu
+                            header={this.state.header}
                             messages={this.state.messages}
                             heroes={this.state.heroes}
                             onMsgsRead={this.handleMsgsRead} />
@@ -599,6 +595,60 @@
         }
     });
     combat.App = App;
+
+
+    var StatusApp = React.createClass({
+        render: function() {
+            var createItem = function(entity) {
+                var hpMeterStyle = {
+                    width: (entity.attr.hp/entity.attr.hpMax * 100) + "%"
+                };
+
+                var mpMeterStyle = {
+                    width: (entity.attr.mp/entity.attr.mpMax * 100) + "%"
+                };
+                return (
+                    <li>
+                        <h3 className="skill-name">{entity.attr.name} - Level {entity.attr.lvl}</h3>
+                        <table className="status-table">
+                            <tr>
+                                <td>HP</td>
+                                <td>
+                                    <div className="status-meter status-meter-hp">
+                                        <div className="status-meter-current" style={hpMeterStyle}></div>
+                                    </div>
+                                </td>
+                                <td>{entity.attr.hp}/{entity.attr.hpMax}</td>
+                            </tr>
+                            <tr>
+                                <td>MP</td>
+                                <td>
+                                    <div className="status-meter status-meter-mp">
+                                        <div className="status-meter-current" style={mpMeterStyle}></div>
+                                    </div>
+                                </td>
+                                <td>{entity.attr.mp}/{entity.attr.mpMax}</td>
+                            </tr>
+                        </table>
+                    </li>
+                );
+            };
+
+            return (
+                <div className="menu-wrap status-wrap">
+                    <ul className="menu-tabs">
+                        <li className="menu-tab-selected">Status</li>
+                        <li>Items</li>
+                    </ul>
+                    <ul className="menu-list">
+                        {this.props.heroes.map(createItem)}
+                    </ul>
+                </div>
+            );
+        }
+    });
+    combat.StatusApp = StatusApp;
+
 
     if (window.rpg === undefined) {
         window.rpg = {};

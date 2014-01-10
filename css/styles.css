@@ -97,6 +97,63 @@ body {
     background: rgb(232, 191, 118);
 }
 
+/* = Battle Result Menu Styles
+-------------------------------------------------------------- */
+.battle-result-wrap .menu-list li {
+    font-size: 16px;
+    cursor: default;
+}
+
+.battle-result-wrap .menu-list li:nth-child(odd) {
+    background: #ececec;
+}
+
+.battle-result-wrap .menu-list li:nth-child(even) {
+    background: #dadada;
+}
+/*
+.status-wrap .menu-tabs {
+    background: #1c95db;
+    color: #fff;
+}*/
+
+.status-wrap .skill-name {
+    font-size: 22px;
+}
+
+.status-meter {
+    background: #ccc;
+    margin: 0 10px;
+    height: 20px;
+    width: 300px;
+}
+
+.status-meter-hp .status-meter-current {
+    background: #15a569;
+    height: 20px;
+}
+
+.status-meter-mp .status-meter-current {
+    background: #8115a5;
+    height: 20px;
+}
+/*
+.status-wrap .menu-tab-selected {
+    background: #1570a6;
+}*/
+
+.status-wrap .menu-list li {
+    cursor: default;
+}
+/*
+.status-wrap .menu-list li:nth-child(even) {
+    background: #fff;
+}
+
+.status-wrap .menu-list li:nth-child(odd) {
+    background: #fff;
+}*/
+
 /* = Math Problem Menu Styles
 -------------------------------------------------------------- */
 .skill-header {
@@ -184,7 +241,7 @@ body {
     color: #fff;
     font-family: monospace;
 }
-
+/*
 .battle-result-wrap {
     padding: 10px;
     width: 400px;
@@ -192,7 +249,7 @@ body {
     position: absolute;
     bottom: 35px;
     left: 120px;
-}
+}*/
 
 .party-wrap {
     width: 260px;

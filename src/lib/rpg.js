@@ -115,6 +115,8 @@
             this.initHero();
         }
 
+        this.initMenu();
+
         // TODO(richard-to): Move this elsewhere. Why passing in whole object?
         this.animLoop = new AnimLoop(this.ctx, this.canvas, this);
         this.animLoop.animate();
@@ -154,6 +156,13 @@
         this.heroSprite.y = levelData.start.y;
         this.heroSprite.faceRight();
         this.sprites.unshift(this.heroSprite);
+    };
+
+    GameDungeon.prototype.initMenu = function() {
+        var StatusApp = rpg.combat.StatusApp;
+        this.menu = React.renderComponent(
+            <StatusApp heroes={this.party} />,
+            this.levelData.menuDiv);
     };
 
     GameDungeon.prototype.suspend = function() {
