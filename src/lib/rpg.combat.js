@@ -1,17 +1,14 @@
 /** @jsx React.DOM */
-(function(window, undefined) {
+define(['jquery', 'react', 'underscore', 'lib/rpg.util'], function($, React, _, util) {
 
-    var combat = {};
-
-    // TODO(richard-to): Need to make sure util loaded. Time to use RequireJS?
-    var util = rpg.util;
     var Control = util.Control;
+    var CircularList = util.CircularList;
 
-
+    // Displays a list of enemies to attack
     var EnemyMenu = React.createClass({
         getInitialState: function() {
             return {
-                enemies: new util.CircularList(this.props.enemies.asArray()),
+                enemies: new CircularList(this.props.enemies.asArray()),
                 ignoreHover: false
             };
         },
@@ -90,14 +87,14 @@
             );
         }
     });
-    combat.EnemyMenu = EnemyMenu;
 
 
+    // Displays a list of skills to select
     var ActionMenu = React.createClass({
         getInitialState: function() {
             return {
                 ignoreHover: false,
-                actions: new util.CircularList(this.props.actions)
+                actions: new CircularList(this.props.actions)
             };
         },
         componentDidMount: function() {
@@ -176,9 +173,9 @@
             );
         }
     });
-    combat.ActionMenu = ActionMenu;
 
 
+    // Displays basic stats after winning battle
     var BattleMenu = React.createClass({
         componentDidMount: function() {
             $(window).on('rpg:keyup.menu', this.handleKeyUp);
@@ -208,9 +205,9 @@
             );
         }
     });
-    combat.BattleMenu = BattleMenu;
 
 
+    // Displays math problems
     var MathMenu = React.createClass({
         getInitialState: function() {
             var problemSet = this.props.action.select();
@@ -297,6 +294,7 @@
         }
     });
 
+    // Displays allies' and team members' names and HP
     var PartyMenu = React.createClass({
         render: function() {
             var selectedEntity = this.props.selected;
@@ -332,9 +330,9 @@
             );
         }
     });
-    combat.PartyMenu = PartyMenu;
 
-
+    // Various game state flags
+    // Maybe convert to the state pattern?
     var MenuContext = {
         NO_ACTIONS: 0,
         SELECT_ACTION: 1,
@@ -344,17 +342,20 @@
     };
 
 
+    // Main App for Combat
+    // TODO(richard-to): Too much logic here?
     var App = React.createClass({
         getInitialState: function() {
             var sprites = new util.EntityHashTable();
+            console.log(util);
             sprites.addFromArrays(this.props.heroes, this.props.heroSprites)
                 .addFromArrays(this.props.enemies, this.props.enemySprites);
             // TODO(richard-to): Temp fix for now
-            var heroes = new util.CircularList(this.props.heroes);
+            var heroes = new CircularList(this.props.heroes);
             return {
                 showActions: MenuContext.SELECT_ACTION,
                 action: null,
-                enemies: new util.CircularList(this.props.enemies),
+                enemies: new CircularList(this.props.enemies),
                 heroes: heroes.filter(function(hero) { return !hero.isDead(); }),
                 sprites: sprites,
                 messages: [],
@@ -594,9 +595,10 @@
             }
         }
     });
-    combat.App = App;
 
 
+    // Not actually part of combat module...
+    // Displays team's health and other status on dungeon scenes
     var StatusApp = React.createClass({
         render: function() {
             var createItem = function(entity) {
@@ -647,11 +649,14 @@
             );
         }
     });
-    combat.StatusApp = StatusApp;
 
-
-    if (window.rpg === undefined) {
-        window.rpg = {};
-    }
-    window.rpg.combat = combat;
-})(window);
+    return {
+        EnemyMenu: EnemyMenu,
+        ActionMenu: ActionMenu,
+        MathMenu: MathMenu,
+        PartyMenu: PartyMenu,
+        BattleMenu: BattleMenu,
+        App: App,
+        StatusApp: StatusApp
+    };
+});

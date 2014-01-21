@@ -1,10 +1,4 @@
-/** @jsx React.DOM */
-(function(window, undefined) {
-
-    // TODO(richard-to): Need to make sure actions loaded. Time to use RequireJS?
-    var actions = rpg.actions;
-
-    var entity = {};
+define(['underscore', 'lib/rpg.actions'], function(_, actions) {
 
     // Base Entity to represent heroes, enemies and NPCs
     var Entity = function(options) {
@@ -55,7 +49,7 @@
     Entity.prototype.isDead = function() {
         return this.attr.hp == 0;
     };
-    entity.Entity = Entity;
+
 
     // Well-rounded character with good attack, accuracy, and defense.
     // Also can cast magic.
@@ -73,9 +67,9 @@
     Corrina.prototype.constructor = Entity;
     // TODO(richard-to): Improve this. Not now though...
     Corrina.prototype.getActions = function() {
-        return [new actions.Slash(), new actions.Strike()];
+        return [new actions.actions.Slash(), new actions.actions.Strike()];
     };
-    entity.Corrina = Corrina;
+
 
     // Character with a powerful attack, but low accuracy, defense, and
     // has no magic.
@@ -92,9 +86,9 @@
     Seth.prototype = Object.create(Entity.prototype);
     Seth.prototype.constructor = Seth;
     Seth.prototype.getActions = function() {
-        return [new actions.Strike(), new actions.Slash()];
+        return [new actions.actions.Strike(), new actions.actions.Slash()];
     };
-    entity.Seth = Seth;
+
 
     // First level enemy
     var EyeballScout = function(options) {
@@ -111,7 +105,7 @@
     };
     EyeballScout.prototype = Object.create(Entity.prototype);
     EyeballScout.prototype.constructor = EyeballScout;
-    entity.EyeballScout = EyeballScout;
+
 
     // Stronger first level enemy
     var EvilBear = function(options) {
@@ -128,10 +122,13 @@
     };
     EvilBear.prototype = Object.create(Entity.prototype);
     EvilBear.prototype.constructor = EvilBear;
-    entity.EvilBear = EvilBear;
 
-    if (window.rpg === undefined) {
-        window.rpg = {};
-    }
-    window.rpg.entity = entity;
-})(window);
+
+    return {
+        Entity: Entity,
+        Corrina: Corrina,
+        Seth: Seth,
+        EyeballScout: EyeballScout,
+        EvilBear: EvilBear
+    };
+});

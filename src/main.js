@@ -1,6 +1,23 @@
-(function(window, undefined) {
+require.config({
+    baseUrl: 'js',
+    shim: {
+        'underscore': {
+            exports: '_'
+        },
+        'react': {
+            exports: 'React'
+        }
+    },
+    paths: {
+        jquery: 'vendor/jquery.min',
+        underscore: 'vendor/underscore.min',
+        react: 'vendor/react.min'
+    }
+});
+
+require(['lib/rpg.util', 'lib/rpg.entity', 'lib/rpg'], function(util, entity, rpg) {
     var levelSettings = {
-        screen: new rpg.util.Screen(64, 10, 7),
+        screen: new util.Screen(64, 10, 7),
 
         areas: {
             dungeon: 'dungeon',
@@ -21,8 +38,17 @@
         },
 
         heroList: {
-            corrina: rpg.entity.Corrina,
-            seth: rpg.entity.Seth
+            corrina: entity.Corrina,
+            seth: entity.Seth
+        },
+
+        // TODO(richard-to): Need a way to configure characters without
+        // instantianting or extending classes.
+        //
+        // Kind of tricky since it includes attack objects
+        // too. Or maybe not.
+        heroStats: {
+
         },
 
         heroFrames: {
@@ -61,8 +87,14 @@
         },
 
         enemyList: [
-            rpg.entity.EyeballScout,
-            rpg.entity.EvilBear
+            entity.EyeballScout,
+            entity.EvilBear
+        ],
+
+        // TODO(richard-to): What if I want to modify enemies
+        // without modifying original entities?
+        enemyStats: [
+
         ],
 
         enemyFrames: [
@@ -127,4 +159,4 @@
     var gameEngine = new rpg.GameEngine(document.getElementById('canvas-container'), levelSettings);
     gameEngine.run();
 
-}(window));
+});

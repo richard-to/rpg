@@ -1,11 +1,17 @@
 /** @jsx React.DOM */
-(function(window, undefined) {
-
-    var rpg = window.rpg;
-    var combat = rpg.combat;
-    var graphics = rpg.graphics;
-    var entities = rpg.entities;
-    var util = rpg.util;
+define([
+    'jquery',
+    'react',
+    'lib/rpg.util',
+    'lib/rpg.graphics',
+    'lib/rpg.combat',
+], function(
+    $,
+    React,
+    util,
+    graphics,
+    combat
+) {
 
     var Control = util.Control;
 
@@ -51,7 +57,6 @@
             self.animate();
         });
     };
-    rpg.AnimLoop = AnimLoop;
 
 
     var GameDungeon = function(levelMediator, party, datastore, options) {
@@ -104,6 +109,7 @@
     // Once external assets are loaded, everything else is initialized.
     // TODO(richard-to): Clean up reloading dungeon/battles multiple times
     GameDungeon.prototype.onAssetsLoad = function() {
+
         if (this.tileFactory == null) {
             this.initTiles();
         }
@@ -159,7 +165,7 @@
     };
 
     GameDungeon.prototype.initMenu = function() {
-        var StatusApp = rpg.combat.StatusApp;
+        var StatusApp = combat.StatusApp;
         this.menu = React.renderComponent(
             <StatusApp heroes={this.party} />,
             this.levelData.menuDiv);
@@ -251,7 +257,6 @@
             this.heroSprite.faceDown();
         }
     };
-    rpg.GameDungeon = GameDungeon;
 
 
     // Loads the combat aspect of the game.
@@ -420,7 +425,8 @@
     // Initializes combat menu.
     GameArena.prototype.initMenu = function() {
         var handleBattleFinished = this.handleBattleFinished.bind(this);
-        var CombatApp = rpg.combat.App;
+        var CombatApp = combat.App;
+        console.log(this.levelData.menuDiv);
         this.menu = React.renderComponent(
             <CombatApp
                 onBattleFinished={handleBattleFinished}
@@ -442,8 +448,6 @@
             this.animLoop.animStopped = true;
         }
     };
-
-    rpg.GameArena = GameArena;
 
 
     var GameLevel = function(datastore, party, options) {
@@ -526,7 +530,6 @@
         this.arena.load();
         this.currentScene = this.arena;
     };
-    rpg.GameLevel = GameLevel;
 
 
     // Game Engine is the main controller for swapping out levels, managing
@@ -580,6 +583,12 @@
     GameEngine.prototype.run = function() {
         this.level.run();
     };
-    rpg.GameEngine = GameEngine;
 
-})(window);
+    return {
+        AnimLoop: AnimLoop,
+        GameLevel: GameLevel,
+        GameDungeon: GameDungeon,
+        GameArena: GameArena,
+        GameEngine: GameEngine
+    };
+});

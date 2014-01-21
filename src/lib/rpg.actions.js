@@ -1,7 +1,4 @@
-/** @jsx React.DOM */
-
-// TODO(richard-to): This is a rough prototype of how this could work
-(function(window, undefined) {
+define([], function() {
     var problems = {};
     var actions = {};
 
@@ -126,10 +123,8 @@
     };
     actions.Slash = Slash;
 
-
-    if (window.rpg === undefined) {
-        window.rpg = {};
-    }
-    window.rpg.actions = actions;
-    window.rpg.problems = problems;
-}(window));
+    return {
+        actions: actions,
+        problems: problems
+    };
+});

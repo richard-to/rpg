@@ -1,8 +1,4 @@
-/** @jsx React.DOM */
-(function(window, undefined) {
-
-    var graphics = {};
-
+define(function() {
 
     // Background tile using solid fill color. Defaults to white.
     //
@@ -20,7 +16,6 @@
         ctx.fillStyle = this.color;
         ctx.fill();
     };
-    graphics.ColorTile = ColorTile;
 
 
     // Background tile from sprite sheet. Expects tiles to be same dimensions and square.
@@ -38,7 +33,6 @@
             x, y, tileSize, tileSize);
         ctx.imageSmoothingEnabled = true;
     };
-    graphics.SpriteTile = SpriteTile;
 
 
     var SpriteHighlightEffect = function(options) {
@@ -283,7 +277,7 @@
     SpriteEnemy.prototype.faceRight = function() {
         this.frameQueue.unshift([this.frames[0], this.x, this.y, 0]);
     };
-    graphics.SpriteEnemy = SpriteEnemy;
+
 
     // Animated character sprite.
     //
@@ -512,8 +506,6 @@
         this.highightSprite.enabled = false;
     };
 
-    graphics.SpriteAnim = SpriteAnim;
-
 
     // Renders background tiles on canvas.
     //
@@ -609,7 +601,6 @@
             }
         }
     };
-    graphics.BgRenderer = BgRenderer;
 
 
     // Renders sprites on screen.
@@ -699,10 +690,15 @@
         ctx.imageSmoothingEnabled = true;
         ctx.globalAlpha = 1.0;
     };
-    graphics.SpriteRenderer = SpriteRenderer;
 
-    if (window.rpg === undefined) {
-        window.rpg = {};
-    }
-    window.rpg.graphics = graphics;
-})(window);
+    return {
+        ColorTile: ColorTile,
+        SpriteTile: SpriteTile,
+        SpriteDamageEffect: SpriteDamageEffect,
+        SpriteDamageEffect: SpriteDamageEffect,
+        BgRenderer: BgRenderer,
+        SpriteRenderer: SpriteRenderer,
+        SpriteEnemy: SpriteEnemy,
+        SpriteAnim: SpriteAnim,
+    };
+});
