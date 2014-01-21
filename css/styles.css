@@ -111,11 +111,6 @@ body {
 .battle-result-wrap .menu-list li:nth-child(even) {
     background: #dadada;
 }
-/*
-.status-wrap .menu-tabs {
-    background: #1c95db;
-    color: #fff;
-}*/
 
 .status-wrap .skill-name {
     font-size: 22px;
@@ -137,22 +132,10 @@ body {
     background: #8115a5;
     height: 20px;
 }
-/*
-.status-wrap .menu-tab-selected {
-    background: #1570a6;
-}*/
 
 .status-wrap .menu-list li {
     cursor: default;
 }
-/*
-.status-wrap .menu-list li:nth-child(even) {
-    background: #fff;
-}
-
-.status-wrap .menu-list li:nth-child(odd) {
-    background: #fff;
-}*/
 
 /* = Math Problem Menu Styles
 -------------------------------------------------------------- */
@@ -241,15 +224,6 @@ body {
     color: #fff;
     font-family: monospace;
 }
-/*
-.battle-result-wrap {
-    padding: 10px;
-    width: 400px;
-
-    position: absolute;
-    bottom: 35px;
-    left: 120px;
-}*/
 
 .party-wrap {
     width: 260px;
