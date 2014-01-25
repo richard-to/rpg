@@ -117,8 +117,10 @@ define(function() {
 
     // Rreturn the circular list as an array.
     // Technically you could access it as myCircleList.list
+    //
+    // Should return clone
     CircularList.prototype.asArray = function () {
-        return this._list;
+        return this._list.slice(0);
     }
 
     // Get the item as specific index.
@@ -126,6 +128,11 @@ define(function() {
     // to the current item in the list.
     CircularList.prototype.get = function(index) {
         return this._list[index];
+    };
+
+    // Gets the index of a value in the circular list
+    CircularList.prototype.indexOf = function(value) {
+        return this._list.indexOf(value);
     };
 
     // Adds an item to the end of the list
@@ -272,7 +279,8 @@ define(function() {
 
     Heap.prototype.insert = function(obj) {
         this._heap.push(obj);
-        this._percolateUp(this._heap.length);
+        this._percolateUp(this._heap.length - 1);
+        return this;
     };
 
     Heap.prototype.min = function() {
@@ -295,15 +303,8 @@ define(function() {
     Heap.prototype._percolateUp = function(hole) {
         if (hole > 0) {
             var parent = null;
-            if (hole % 2 == 0) {
-                parent = (hole - 1) / 2;
-            } else {
-                parent = hole / 2;
-            }
-            if (parent < this._heap.length &&
-                hole < this._heap.length &&
-                this._compare(this._heap[hole], this._heap[parent]) > 0)  {
-
+            parent = Math.floor((hole - 1) / 2);
+            if (this._compare(this._heap[hole], this._heap[parent]) < 0)  {
                 var temp = this._heap[parent];
                 this._heap[parent] = this._heap[hole];
                 this._heap[hole] = temp;
@@ -317,15 +318,18 @@ define(function() {
         child1 = 2 * hole + 1;
         child2 = child1 + 1;
         if (child1 < this._heap.length &&
-            (child2 >= this._heap.length || this._compare(this._heap[child1], this._heap[child2]) < 0) &&
-            this._compare(parent, this._heap[child1]) > 0) {
-            this._heap[hole] = this._heap[child1];
-            this._heap[child1] = parent;
-            this._percolateDown(child1);
-        } else if (child2 < this._heap.length && this._compare(parent, this._heap[child2]) > 0) {
-            this._heap[hole] = this._heap[child2];
-            this._heap[child2] = parent;
-            this._percolateDown(child2);
+            (child2 >= this._heap.length || this._compare(this._heap[child1], this._heap[child2]) < 0)) {
+            if (this._compare(parent, this._heap[child1]) > 0) {
+                this._heap[hole] = this._heap[child1];
+                this._heap[child1] = parent;
+                this._percolateDown(child1);
+            }
+        } else if (child2 < this._heap.length) {
+            if (this._compare(parent, this._heap[child2]) > 0) {
+                this._heap[hole] = this._heap[child2];
+                this._heap[child2] = parent;
+                this._percolateDown(child2);
+            }
         }
     };
 
